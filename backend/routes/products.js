@@ -48,10 +48,25 @@ router.get('/:slug', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    // Validate required fields
+    const { name, slug, description, category, price, moq } = req.body
+    if (!name || !slug || !description || !category || !price || !moq) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: name, slug, description, category, price, moq' 
+      })
+    }
+
     const product = new Product(req.body)
-    await product.save()
-    res.status(201).json(product)
+    const savedProduct = await product.save()
+    
+    console.log('✅ Product saved:', savedProduct._id)
+    res.status(201).json(savedProduct)
   } catch (error) {
+    console.error('❌ Product save error:', error.message)
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0]
+      return res.status(400).json({ error: `Duplicate ${field}. Please use a unique value.` })
+    }
     res.status(400).json({ error: error.message })
   }
 })

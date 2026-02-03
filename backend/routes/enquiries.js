@@ -1,7 +1,7 @@
 import express from 'express'
 import Enquiry from '../models/Enquiry.js'
 import Product from '../models/Product.js'
-import { sendEnquiryEmail } from '../utils/email.js'
+
 
 const router = express.Router()
 
@@ -31,24 +31,29 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const enquiry = new Enquiry(req.body)
-    await enquiry.save()
+    const { product, name, email, phone, message } = req.body
     
-    // Populate product and supplier for email
-    await enquiry.populate('product supplier')
+    if (!product || !name || !email || !phone || !message) {
+      return res.status(400).json({ error: 'product, name, email, phone, and message are required' })
+    }
+
+    const enquiry = new Enquiry(req.body)
+    const savedEnquiry = await enquiry.save()
+    
+    // Populate product and supplier for response
+    await savedEnquiry.populate('product supplier')
     
     // Increment enquiry count on product
-    await Product.findByIdAndUpdate(req.body.product, { $inc: { enquiries: 1 } })
+    await Product.findByIdAndUpdate(product, { $inc: { enquiries: 1 } })
     
-    // Send confirmation email
-    await sendEnquiryEmail(enquiry)
+    console.log('✅ Enquiry created:', savedEnquiry._id)
     
     res.status(201).json({ 
       message: 'Enquiry submitted successfully',
-      enquiry 
+      enquiry: savedEnquiry 
     })
   } catch (error) {
-    console.error('Enquiry submission error:', error)
+    console.error('❌ Enquiry submission error:', error.message)
     res.status(400).json({ error: error.message })
   }
 })

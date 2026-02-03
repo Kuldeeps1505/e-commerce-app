@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { Package, Users, MessageSquare, TrendingUp, Eye, Plus } from 'lucide-react'
 import api from '../api'
 
+
+
+
 const stats = [
   { icon: Package, label: 'Total Products', value: '1,250', change: '+12%' },
   { icon: Users, label: 'Active Suppliers', value: '342', change: '+8%' },
@@ -13,8 +16,10 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [suppliers, setSuppliers] = useState([])
   const [products, setProducts] = useState([])
+  const [categories, setCategories] = useState([])
   const [enquiries, setEnquiries] = useState([])
   const [showAddProduct, setShowAddProduct] = useState(false)
+  const [showAddCategory, setShowAddCategory] = useState(false)
   const [productForm, setProductForm] = useState({
     name: '',
     slug: '',
@@ -27,15 +32,29 @@ export default function AdminDashboard() {
     supplier: '',
     images: ''
   })
+  const [categoryForm, setCategoryForm] = useState({
+    name: '',
+    slug: '',
+    icon: '',
+    description: ''
+  })
+
+
+const [loadingCategories, setLoadingCategories] = useState(false);
+const [loadingSuppliers, setLoadingSuppliers] = useState(false);
+
 
   useEffect(() => {
     if (activeTab === 'suppliers') {
-      api.get('/suppliers')
-        .then(res => setSuppliers(res.data.suppliers || []))
-        .catch(() => setSuppliers([]))
+      fetchSuppliers()
     }
     if (activeTab === 'products') {
       fetchProducts()
+      fetchCategories()
+      fetchSuppliers()
+    }
+    if (activeTab === 'categories') {
+      fetchCategories()
     }
     if (activeTab === 'enquiries') {
       fetchEnquiries()
@@ -68,9 +87,41 @@ export default function AdminDashboard() {
     }
   }
 
+  const fetchCategories = async () => {
+  try {
+    setLoadingCategories(true);
+    const res = await api.get('/categories');
+    setCategories(res.data || []);
+  } catch (error) {
+    console.error('Failed to fetch categories:', error);
+    setCategories([]);
+  } finally {
+    setLoadingCategories(false);
+  }
+};
+
+const fetchSuppliers = async () => {
+  try {
+    setLoadingSuppliers(true);
+    const res = await api.get('/suppliers');
+    setSuppliers(res.data.suppliers || []);
+  } catch (error) {
+    console.error('Failed to fetch suppliers:', error);
+    setSuppliers([]);
+  } finally {
+    setLoadingSuppliers(false);
+  }
+};
+
+
   const handleProductChange = (e) => {
     const { name, value } = e.target
     setProductForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleCategoryChange = (e) => {
+    const { name, value } = e.target
+    setCategoryForm(prev => ({ ...prev, [name]: value }))
   }
 
   const handleAddProduct = async (e) => {
@@ -98,7 +149,6 @@ export default function AdminDashboard() {
       setShowAddProduct(false)
       setProductForm({
         name: '',
-        slug: '',
         description: '',
         priceMin: '',
         priceMax: '',
@@ -124,6 +174,41 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error('Failed to delete product:', error)
       alert('❌ Failed to delete product.')
+    }
+  }
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault()
+    try {
+      const data = {
+        name: categoryForm.name,
+        slug: categoryForm.slug || categoryForm.name.toLowerCase().replace(/\s+/g, '-'),
+        icon: categoryForm.icon,
+        description: categoryForm.description
+      }
+      await api.post('/categories', data)
+      alert('✅ Category added successfully!')
+      setShowAddCategory(false)
+      setCategoryForm({
+        name: '',
+        icon: '',
+        description: ''
+      })
+      fetchCategories()
+    } catch (error) {
+      console.error('Failed to add category:', error)
+      alert(`❌ Failed to add category: ${error.response?.data?.error || error.message}`)
+    }
+  }
+
+  const handleDeleteCategory = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this category?')) return
+    try {
+      // Note: You may need to add a DELETE endpoint for categories
+      alert('❌ Delete category feature coming soon.')
+    } catch (error) {
+      console.error('Failed to delete category:', error)
+      alert('❌ Failed to delete category.')
     }
   }
 
@@ -153,7 +238,7 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg shadow-md mb-8">
           <div className="border-b">
             <div className="flex gap-4 px-6">
-              {['overview', 'products', 'enquiries', 'suppliers'].map(tab => (
+              {['overview', 'products', 'categories', 'enquiries', 'suppliers'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -244,41 +329,57 @@ export default function AdminDashboard() {
                           onChange={handleProductChange}
                         />
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Slug (URL)</label>
-                        <input 
-                          type="text" 
-                          name="slug" 
-                          className="input-field"
-                          placeholder="auto-generated if empty"
-                          value={productForm.slug}
-                          onChange={handleProductChange}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Category ID *</label>
-                        <input 
-                          type="text" 
-                          name="category" 
-                          required 
-                          className="input-field"
-                          placeholder="MongoDB ObjectId"
-                          value={productForm.category}
-                          onChange={handleProductChange}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Supplier ID *</label>
-                        <input 
-                          type="text" 
-                          name="supplier" 
-                          required 
-                          className="input-field"
-                          placeholder="MongoDB ObjectId"
-                          value={productForm.supplier}
-                          onChange={handleProductChange}
-                        />
-                      </div>
+                       {/*CATEGORY DROPDOWN */}
+                     <div>
+                         <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Category *
+                         </label>
+                   <select
+                       name="category"
+                       required
+                       className="input-field"
+                       value={productForm.category}
+                       onChange={handleProductChange}
+                       disabled={loadingCategories}
+                     >
+                       <option value="">
+                       {loadingCategories ? 'Loading categories...' : 'Select Category'}
+                     </option>
+
+                   {categories.map(cat => (
+                    <option key={cat._id} value={cat._id}>
+                    {cat.name}
+                   </option>
+                    ))}
+                 </select>
+               </div>
+                      
+                        
+                             <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Supplier *
+                 </label>
+
+                     <select
+                       name="supplier"
+                       required
+                       className="input-field"
+                       value={productForm.supplier}
+                       onChange={handleProductChange}
+                        disabled={loadingSuppliers}
+                      >
+                      <option value="">
+                         {loadingSuppliers ? 'Loading suppliers...' : 'Select Supplier'}
+                     </option>
+
+                    {suppliers.map(supplier => (
+                  <option key={supplier._id} value={supplier._id}>
+                      {supplier.companyName}
+                 </option>
+                     ))}
+                  </select>
+                  </div>
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Min Price (₹) *</label>
                         <input 
@@ -328,16 +429,25 @@ export default function AdminDashboard() {
                         </select>
                       </div>
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Image URLs (comma separated) *</label>
-                        <input 
-                          type="text" 
-                          name="images" 
-                          required 
-                          className="input-field"
-                          placeholder="https://image1.jpg, https://image2.jpg"
-                          value={productForm.images}
-                          onChange={handleProductChange}
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Image</label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={async (e) => {
+                          const formData = new FormData();
+                           formData.append('image', e.target.files[0]);
+
+                          const res = await api.post('/upload/product-image', formData, {
+                          headers: { 'Content-Type': 'multipart/form-data' }
+                          });
+
+                           setProductForm(prev => ({
+                               ...prev,
+                            images: [...prev.images, res.data.url]
+                             }));
+                            }}
                         />
+
                       </div>
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
@@ -397,6 +507,104 @@ export default function AdminDashboard() {
                       </div>
                     ))
                   )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'categories' && (
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-bold text-gray-800">Manage Categories</h3>
+                  <button 
+                    onClick={() => setShowAddCategory(!showAddCategory)}
+                    className="btn-primary flex items-center"
+                  >
+                    <Plus size={18} className="mr-2" />
+                    {showAddCategory ? 'Cancel' : 'Add Category'}
+                  </button>
+                </div>
+
+                {showAddCategory && (
+                  <div className="bg-gray-50 p-6 rounded-lg mb-6">
+                    <h4 className="font-semibold text-lg mb-4">Add New Category</h4>
+                    <form onSubmit={handleAddCategory} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Category Name *</label>
+                        <input 
+                          type="text" 
+                          name="name" 
+                          required 
+                          className="input-field"
+                          value={categoryForm.name}
+                          onChange={handleCategoryChange}
+                          placeholder="e.g., Electronics"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Icon (Emoji)</label>
+                        <input 
+                          type="text" 
+                          name="icon" 
+                          className="input-field"
+                          placeholder="e.g., 💻"
+                          value={categoryForm.icon}
+                          onChange={handleCategoryChange}
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea 
+                          name="description" 
+                          rows="3"
+                          className="input-field"
+                          value={categoryForm.description}
+                          onChange={handleCategoryChange}
+                          placeholder="Brief description of this category"
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <button type="submit" className="btn-primary px-6 py-2">
+                          Add Category
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                <div className="overflow-x-auto">
+                  <table className="w-full bg-white rounded-lg shadow">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Name</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Icon</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Description</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {categories.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="px-4 py-8 text-center text-gray-500">
+                            No categories available. Add your first category!
+                          </td>
+                        </tr>
+                      ) : (
+                        categories.map(category => (
+                          <tr key={category._id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                              {category.icon} {category.name}
+                            </td>
+                            <td className="px-4 py-3 text-sm">{category.icon}</td>
+                            <td className="px-4 py-3 text-sm">
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
+                              {category.description || '-'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}

@@ -2,7 +2,7 @@ import mongoose from 'mongoose'
 
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  slug: { type: String, required: true, unique: true },
+  slug: { type: String, required: true, unique: true, sparse: true },
   description: { type: String, required: true },
   category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
   price: {
@@ -23,7 +23,7 @@ const productSchema = new mongoose.Schema({
     key: String,
     value: String
   }],
-  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier', required: true },
+  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
   views: { type: Number, default: 0 },
   enquiries: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true },

@@ -28,13 +28,29 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    const { companyName, email, phone, businessType, address, categoryOption } = req.body
+    
+    // Validate required fields
+    if (!companyName || !email || !phone || !businessType || !address || !categoryOption) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: companyName, email, phone, businessType, address, categoryOption' 
+      })
+    }
+
     const supplier = new Supplier(req.body)
-    await supplier.save()
+    const savedSupplier = await supplier.save()
+    
+    console.log('✅ Supplier registered:', savedSupplier._id)
     res.status(201).json({ 
       message: 'Supplier registration submitted successfully',
-      supplier 
+      supplier: savedSupplier 
     })
   } catch (error) {
+    console.error('❌ Supplier registration error:', error.message)
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0]
+      return res.status(400).json({ error: `Duplicate ${field}. Please use a unique value.` })
+    }
     res.status(400).json({ error: error.message })
   }
 })

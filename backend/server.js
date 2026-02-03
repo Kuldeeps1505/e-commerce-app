@@ -10,15 +10,32 @@ import authRoutes from './routes/auth.js'
 dotenv.config()
 
 const app = express()
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 7000
 
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/b2b-marketplace')
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err))
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/import-exportdb', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+})
+  .then(() => console.log('✅ MongoDB connected successfully'))
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err.message)
+    process.exit(1)
+  })
+
+// Handle connection events
+mongoose.connection.on('disconnected', () => {
+  console.log('⚠️ MongoDB disconnected')
+})
+
+mongoose.connection.on('error', (err) => {
+  console.error('❌ MongoDB error:', err.message)
+})
 
 app.use('/api/products', productRoutes)
 app.use('/api/enquiries', enquiryRoutes)
@@ -28,6 +45,7 @@ app.use('/api/auth', authRoutes)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' })
 })
+app.use('/uploads', express.static('uploads'));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
