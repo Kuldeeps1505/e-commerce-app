@@ -19,7 +19,7 @@ export default function Profile() {
       try {
         const res = await api.get("/profile/me");
         setUser(res.data.user);          // sync auth context
-        setEnquiries(res.data.enquiries || []);
+        
       } catch (error) {
         console.error("Failed to load profile", error);
       } finally {
@@ -29,6 +29,27 @@ export default function Profile() {
 
     fetchProfile();
   }, [setUser]);
+
+ 
+  useEffect(() => {
+  const fetchEnquiries = async () => {
+    try {
+      const res = await api.get("/enquiries");
+
+      // ✅ FIX HERE
+      setEnquiries(res.data.enquiries || []);
+      // OR if your backend sends { data: [...] }
+      // setEnquiries(res.data.data || []);
+
+    } catch (err) {
+      console.error("Enquiry fetch failed", err);
+      setEnquiries([]); // safety
+    }
+  };
+
+  fetchEnquiries();
+}, []);
+
 
   // ✅ LOGOUT HANDLER
   const handleLogout = () => {

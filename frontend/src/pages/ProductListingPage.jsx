@@ -20,6 +20,8 @@ export default function ProductListingPage() {
   const [sortBy, setSortBy] = useState("relevance")
 
   const [searchParams] = useSearchParams()
+  const searchQuery = searchParams.get("q") || "";
+  
 
   const search = searchParams.get("search")
   const category = searchParams.get("category")
@@ -61,7 +63,15 @@ export default function ProductListingPage() {
     if (selectedCategory !== "all" && p.category?.slug !== selectedCategory) {
       return false
     }
-
+    
+     // SEARCH FILTER
+  if (
+    searchQuery &&
+    !p.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ) {
+    return false;
+  }
+  
     // PRICE
     if (p.price?.min > priceRange[1]) return false
 

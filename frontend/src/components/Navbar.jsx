@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Search, Menu, X, Globe, User, UserCircle } from 'lucide-react'
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { Navigate} from "react-router-dom";
+import Category from '../../../backend/models/Category';
+//import {useNavigate} from "react-router-dom";
 
 const categories = [
   'All Categories',
@@ -44,6 +45,9 @@ export default function Navbar() {
     return () => window.removeEventListener("auth-change", syncAuth)
   }, [])
 
+  
+  
+  
   const handleSearch = (e) => {
   e.preventDefault()
 
@@ -127,8 +131,8 @@ export default function Navbar() {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="w-full px-4 py-2.5 border border-surface-border rounded-xl mb-2 bg-white text-slate-700 text-sm"
               >
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                {categories.map(Category => (
+                  <option key={Category.slug} value={Category.slug}>{Category.name}</option>
                 ))}
               </select>
               <div className="flex">
