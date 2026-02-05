@@ -7,6 +7,13 @@ import enquiryRoutes from './routes/enquiries.js'
 import supplierRoutes from './routes/suppliers.js'
 import categoryRoutes from './routes/categories.js'
 import authRoutes from './routes/auth.js'
+import adminSupplierRoutes from "./routes/adminsupplier.js"
+import adminEnquiryRoutes from "./routes/adminenquiry.js"
+import profileRoutes from "./routes/profile.js";
+import uploadRoutes from "./routes/upload.js";
+
+
+
 dotenv.config()
 
 const app = express()
@@ -16,7 +23,7 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/import-exportdb', {
+mongoose.connect(process.env.MONGODB_URI || {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000,
@@ -45,7 +52,12 @@ app.use('/api/auth', authRoutes)
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' })
 })
-app.use('/uploads', express.static('uploads'));
+
+app.use("/api/admin/suppliers", adminSupplierRoutes);
+app.use("/api/admin/enquiries", adminEnquiryRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/uploads", express.static("uploads"));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

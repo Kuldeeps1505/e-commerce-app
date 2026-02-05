@@ -1,30 +1,18 @@
-import multer from 'multer';
-import path from 'path';
+import multer from "multer";
+import path from "path";
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/products');
+  destination(req, file, cb) {
+    cb(null, "uploads/products");
   },
-  filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() + '-' + Math.round(Math.random() * 1e9);
+  filename(req, file, cb) {
     cb(
       null,
-      uniqueName + path.extname(file.originalname)
+      `${Date.now()}-${file.originalname.replace(/\s+/g, "")}`
     );
-  }
+  },
 });
 
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only images allowed'), false);
-  }
-};
+const upload = multer({ storage });
 
-export const upload = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 2 * 1024 * 1024 } // 2MB
-});
+export default upload;

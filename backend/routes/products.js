@@ -3,37 +3,52 @@ import Product from '../models/Product.js'
 
 const router = express.Router()
 
-router.get('/', async (req, res) => {
+import Category from "../models/Category.js";
+
+router.get("/", async (req, res) => {
   try {
-    const { category, search, sort, page = 1, limit = 12 } = req.query
-    const query = { isActive: true }
-    
-    if (category) query.category = category
-    if (search) query.$text = { $search: search }
-    
+    const { category, search, sort, page = 1, limit = 12 } = req.query;
+
+    const query = {};
+
+    // 🔎 SEARCH
+    if (search) {
+      query.name = { $regex: search, $options: "i" };
+    }
+
+    // 📂 CATEGORY (convert name/slug → ObjectId)
+    if (category && category !== "All Categories") {
+      const cat = await Category.findOne({
+        $or: [{ name: category }, { slug: category }]
+      });
+      if (cat) query.category = cat._id;
+    }
+
     const products = await Product.find(query)
-      .populate('category supplier')
-      .limit(limit * 1)
+      .populate("category")
+      .limit(Number(limit))
       .skip((page - 1) * limit)
-      .sort(sort || '-createdAt')
-    
-    const count = await Product.countDocuments(query)
-    
+      .sort(sort || "-createdAt");
+
+    const count = await Product.countDocuments(query);
+
     res.json({
       products,
       totalPages: Math.ceil(count / limit),
-      currentPage: page,
+      currentPage: Number(page),
       total: count
-    })
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    console.error("Product fetch error:", error);
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
-router.get('/:slug', async (req, res) => {
+
+router.get('/:slug', async (req, res) => { 
   try {
     const product = await Product.findOne({ slug: req.params.slug })
-      .populate('category supplier')
+      .populate('category')
     
     if (!product) return res.status(404).json({ error: 'Product not found' })
     

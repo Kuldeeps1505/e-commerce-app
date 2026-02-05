@@ -24,7 +24,28 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+
+    supplierStatus: {
+      type: String,
+      enum: ["none", "pending", "approved", "rejected"],
+      default: "none",
+    },
+
+    supplierRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Supplier",
+    },
+
+    // Profile notifications
+    notifications: [
+      {
+        message: String,
+        read: { type: Boolean, default: false },
+        createdAt: { type: Date, default: Date.now },
+      }
+    ]
   },
+
   { timestamps: true }
 );
 

@@ -76,36 +76,37 @@ export default function SupplierRegistration() {
       alert(`❌ Registration failed: ${errorMsg}`)
     }
   }
-
+   
   return (
-    <div className="bg-gray-50 min-h-screen py-12">
+    <div className="bg-surface min-h-screen py-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Become a Supplier</h1>
+        <div className="bg-surface-elevated rounded-2xl shadow-soft border border-surface-border p-8 sm:p-10">
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">Become a Supplier</h1>
+          <p className="text-slate-500 mb-6">Register your business to reach global buyers on TradeHub.</p>
           <form onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Company Name *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Company Name *</label>
                 <input type="text" name="companyName" required className="input-field"
                   value={formData.companyName} onChange={handleChange} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Contact Person *</label>
                 <input type="text" name="contactPerson" required className="input-field"
                   value={formData.contactPerson} onChange={handleChange} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Email *</label>
                 <input type="email" name="email" required className="input-field"
                   value={formData.email} onChange={handleChange} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Phone *</label>
                 <input type="tel" name="phone" required className="input-field"
                   value={formData.phone} onChange={handleChange} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Business Type *
                 </label>
                 <select
@@ -125,7 +126,7 @@ export default function SupplierRegistration() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Product Category *
                 </label>
                 <select
@@ -146,34 +147,34 @@ export default function SupplierRegistration() {
 
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Street Address</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Street Address</label>
                 <input type="text" name="address.street" className="input-field"
                   value={formData.address.street} onChange={handleChange} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">City *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">City *</label>
                 <input type="text" name="address.city" required className="input-field"
                   value={formData.address.city} onChange={handleChange} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">State *</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">State *</label>
                 <input type="text" name="address.state" required className="input-field"
                   value={formData.address.state} onChange={handleChange} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Country</label>
                 <input type="text" name="address.country" className="input-field"
                   value={formData.address.country} onChange={handleChange} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Pincode</label>
                 <input type="text" name="address.pincode" className="input-field"
                   value={formData.address.pincode} onChange={handleChange} />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Product Description *</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Product Description *</label>
               <textarea name="productDescription" required rows="4" className="input-field"
                 placeholder="Describe your products and services..."
                 value={formData.productDescription} onChange={handleChange} />
@@ -182,12 +183,12 @@ export default function SupplierRegistration() {
 
             <div className="flex items-start">
               <input type="checkbox" required className="mt-1 mr-2" />
-              <label className="text-sm text-gray-600">
+              <label className="text-sm text-slate-500">
                 I agree to the Terms & Conditions and Privacy Policy
               </label>
             </div>
 
-            <button type="submit" className="btn-primary px-6 py-2 text-base block mx-auto">
+            <button type="submit" className="btn-secondary px-8 py-3 text-base font-semibold rounded-xl block mx-auto shadow-soft hover:shadow-secondary">
               Submit Registration
             </button>
           </form>

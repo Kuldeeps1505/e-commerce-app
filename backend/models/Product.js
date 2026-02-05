@@ -23,7 +23,6 @@ const productSchema = new mongoose.Schema({
     key: String,
     value: String
   }],
-  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
   views: { type: Number, default: 0 },
   enquiries: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true },

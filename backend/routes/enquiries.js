@@ -3,6 +3,7 @@ import Enquiry from '../models/Enquiry.js'
 import Product from '../models/Product.js'
 
 
+
 const router = express.Router()
 
 router.get('/', async (req, res) => {
@@ -11,7 +12,7 @@ router.get('/', async (req, res) => {
     const query = status ? { status } : {}
     
     const enquiries = await Enquiry.find(query)
-      .populate('product supplier')
+      .populate('product')
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort('-createdAt')
@@ -37,11 +38,15 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'product, name, email, phone, and message are required' })
     }
 
-    const enquiry = new Enquiry(req.body)
+    const enquiry = new Enquiry({
+         ...req.body,
+        user: req.user ? req.user._id : null
+    });
+    
     const savedEnquiry = await enquiry.save()
     
     // Populate product and supplier for response
-    await savedEnquiry.populate('product supplier')
+    await savedEnquiry.populate('product')
     
     // Increment enquiry count on product
     await Product.findByIdAndUpdate(product, { $inc: { enquiries: 1 } })

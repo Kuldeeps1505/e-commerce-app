@@ -26,18 +26,24 @@ router.get('/', async (req, res) => {
   }
 })
 
+// No login required — public supplier registration
 router.post('/', async (req, res) => {
   try {
-    const { companyName, email, phone, businessType, address, categoryOption } = req.body
-    
-    // Validate required fields
-    if (!companyName || !email || !phone || !businessType || !address || !categoryOption) {
-      return res.status(400).json({ 
-        error: 'Missing required fields: companyName, email, phone, businessType, address, categoryOption' 
+    const { companyName, contactPerson, email, phone, businessType, address, categoryOption, productDescription } = req.body
+
+    if (!companyName || !email || !phone || !businessType || !categoryOption) {
+      return res.status(400).json({
+        error: 'Missing required fields: companyName, email, phone, businessType, categoryOption'
       })
     }
 
-    const supplier = new Supplier(req.body)
+    // Only allow business fields; user/status/adminComment set only by admin on approval
+    const payload = { companyName, contactPerson, email, phone, businessType, categoryOption, productDescription }
+    if (address != null) payload.address = address
+    const supplier = new Supplier({
+               ...req.body,
+              user: req.user?._id || null
+    });
     const savedSupplier = await supplier.save()
     
     console.log('✅ Supplier registered:', savedSupplier._id)

@@ -57,7 +57,7 @@ router.post("/login", async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role },
       JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: "1d" }
     );
 
     res.status(200).json({
@@ -69,4 +69,6 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Login Error", error: error.message });
   }
 });
+
+
 export default router;

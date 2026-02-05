@@ -1,6 +1,13 @@
 import mongoose from 'mongoose'
 
 const supplierSchema = new mongoose.Schema({
+
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: false
+  },
+
   companyName: { type: String, required: true },
   contactPerson: { type: String, required: true },
   email: { type: String, required: true, unique: true, sparse: true },
@@ -24,6 +31,13 @@ const supplierSchema = new mongoose.Schema({
   },
   productDescription: { type: String },
   
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending'
+  },
+
+  adminComment: String
   
   
 }, { timestamps: true })

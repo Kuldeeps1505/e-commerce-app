@@ -4,24 +4,30 @@
 
 @layer base {
   body {
-    @apply font-sans antialiased;
+    @apply font-sans antialiased text-slate-800 bg-surface;
+  }
+  html {
+    @apply scroll-smooth;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-primary text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium;
+    @apply bg-primary text-white px-6 py-2.5 rounded-xl hover:bg-primary-dark transition-all font-medium shadow-soft hover:shadow-primary;
   }
-  
   .btn-secondary {
-    @apply bg-secondary text-white px-6 py-2.5 rounded-lg hover:bg-green-600 transition-colors font-medium;
+    @apply bg-secondary text-white px-6 py-2.5 rounded-xl hover:bg-secondary-dark transition-all font-medium shadow-soft hover:shadow-secondary;
   }
-  
   .card {
-    @apply bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300;
+    @apply bg-surface-elevated rounded-2xl shadow-soft border border-surface-border hover:shadow-soft-lg transition-all duration-200;
   }
-  
   .input-field {
-    @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+    @apply w-full px-4 py-2.5 border border-surface-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow bg-white;
+  }
+  .section-head {
+    @apply text-slate-800 font-bold;
+  }
+  .text-muted {
+    @apply text-slate-500;
   }
 }

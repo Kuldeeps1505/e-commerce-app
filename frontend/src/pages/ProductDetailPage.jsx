@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { MapPin, Phone, Mail, CheckCircle, X } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import api from '../api'
+import { Link } from "react-router-dom";
+
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams()
@@ -33,18 +35,18 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Loading product...</div>
+      <div className="bg-surface min-h-screen flex items-center justify-center">
+        <div className="text-slate-500">Loading product...</div>
       </div>
     )
   }
 
   if (!product) {
     return (
-      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="bg-surface min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Product Not Found</h2>
-          <p className="text-gray-600">The product you're looking for doesn't exist.</p>
+          <h2 className="text-2xl font-bold text-slate-800 mb-2">Product Not Found</h2>
+          <p className="text-slate-500">The product you're looking for doesn't exist.</p>
         </div>
       </div>
     )
@@ -61,11 +63,17 @@ export default function ProductDetailPage() {
     : 'India'
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="bg-white border-b py-3">
+    <div className="bg-surface min-h-screen">
+      <div className="bg-surface-elevated border-b border-surface-border py-3">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-sm text-gray-600">
-            Home / Category / <span className="text-gray-800 font-medium">{productSlug}</span>
+          <div className="text-sm text-slate-500">
+            <Link
+              to="/"
+                 className="hover:text-primary transition-colors font-medium"
+                  >
+                  Home
+            </Link>
+             {" / "}<span className="text-slate-800 font-medium">{productSlug}</span>
           </div>
         </div>
       </div>
@@ -73,7 +81,7 @@ export default function ProductDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-surface-elevated rounded-2xl shadow-soft border border-surface-border p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <img
@@ -88,8 +96,8 @@ export default function ProductDetailPage() {
                         src={img}
                         alt={`Thumbnail ${idx + 1}`}
                         onClick={() => setSelectedImage(idx)}
-                        className={`w-20 h-20 object-cover rounded cursor-pointer border-2 ${
-                          selectedImage === idx ? 'border-primary' : 'border-gray-200'
+                        className={`w-20 h-20 object-cover rounded-xl cursor-pointer border-2 transition-colors ${
+                          selectedImage === idx ? 'border-primary' : 'border-surface-border'
                         }`}
                       />
                     ))}
@@ -97,7 +105,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800 mb-4">
+                  <h1 className="text-2xl font-bold text-slate-800 mb-4">
                     {product.name}
                   </h1>
                   <div className="text-3xl font-bold text-primary mb-2">{price}</div>
@@ -208,7 +216,7 @@ export default function ProductDetailPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Related Products</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map(product => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.slug} product={product} />
             ))}
           </div>
         </div>
@@ -228,36 +236,37 @@ function EnquiryModal({ onClose, product }) {
   const [submitting, setSubmitting] = useState(false)
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setSubmitting(true)
-    
-    try {
-      const enquiryData = {
-        ...formData,
-        product: product._id
-      }
-      
-      // Only add supplier if it exists
-      if (product.supplier) {
-        enquiryData.supplier = product.supplier._id || product.supplier
-      }
-      
-      console.log('📤 Submitting enquiry:', enquiryData)
-      
-      const response = await api.post('/enquiries', enquiryData)
-      console.log('✅ Enquiry response:', response.data)
-      
-      alert('✅ Enquiry submitted successfully! Check your email for confirmation.')
-      onClose()
-    } catch (error) {
-      console.error('❌ Failed to submit enquiry:', error)
-      console.error('Error details:', error.response?.data)
-      const errorMsg = error.response?.data?.error || error.message
-      alert(`❌ Failed to submit enquiry: ${errorMsg}`)
-    } finally {
-      setSubmitting(false)
-    }
+  e.preventDefault()
+
+  if (!product || !product._id) {
+    alert("❌ Product not loaded. Please wait.")
+    return
   }
+
+  setSubmitting(true)
+
+  try {
+    const enquiryData = {
+      ...formData,
+      product: product._id
+    }
+
+    console.log('📤 Submitting enquiry:', enquiryData)
+
+    const response = await api.post('/enquiries', enquiryData)
+
+    alert('✅ Enquiry submitted successfully!')
+    onClose()
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || error.message
+    alert(`❌ Failed to submit enquiry: ${errorMsg}`)
+  } finally {
+    setSubmitting(false)
+  }
+}
+
+
+  
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -315,13 +324,13 @@ function EnquiryModal({ onClose, product }) {
             value={formData.message}
             onChange={(e) => setFormData({...formData, message: e.target.value})}
           />
-          <button 
-            type="submit" 
-            disabled={submitting}
-            className="w-full btn-primary py-3 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {submitting ? 'Submitting...' : 'Submit Inquiry'}
-          </button>
+          <button
+  type="submit"
+  disabled={submitting || !product}
+  className="btn-primary disabled:opacity-50"
+>
+  {submitting ? "Submitting..." : "Submit Enquiry"}
+</button>  
         </form>
       </div>
     </div>
