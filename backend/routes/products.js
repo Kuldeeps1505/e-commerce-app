@@ -25,7 +25,7 @@ router.get("/", async (req, res) => {
     }
 
     const products = await Product.find(query)
-      .populate("category")
+      .populate("category", "name slug")
       .limit(Number(limit))
       .skip((page - 1) * limit)
       .sort(sort || "-createdAt");
@@ -48,7 +48,7 @@ router.get("/", async (req, res) => {
 router.get('/:slug', async (req, res) => { 
   try {
     const product = await Product.findOne({ slug: req.params.slug })
-      .populate('category')
+      .populate('category', 'name slug')
     
     if (!product) return res.status(404).json({ error: 'Product not found' })
     
@@ -103,5 +103,30 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: error.message })
   }
 })
+
+
+// GET /api/products/search-one?name=pineapple&category=Electronics
+router.get("/search-one", async (req, res) => {
+  try {
+    const { name, category } = req.query
+
+    const query = {
+      name: { $regex: `^${name}$`, $options: "i" },
+    }
+
+    if (category) query.category = category
+
+    const product = await Product.findOne(query)
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" })
+    }
+
+    res.json(product)
+  } catch (err) {
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
 
 export default router

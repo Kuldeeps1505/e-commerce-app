@@ -7,7 +7,7 @@ import { Link } from "react-router-dom"
 import { useSearchParams } from "react-router-dom"
 
 
-const relatedCategories = ['Ayurveda & Herbal', 'Electronics', 'Agriculture','Home Accessories', 'Textiles', 'Machinery', 'Chemical','Food Products']
+//const relatedCategories = ['Ayurveda & Herbal', 'Electronics', 'Agriculture','Home Accessories', 'Textiles', 'Machinery', 'Chemical','Food Products']
 
 export default function ProductListingPage() {
   const { categorySlug } = useParams()
@@ -21,10 +21,27 @@ export default function ProductListingPage() {
 
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get("q") || "";
-  
+  const search = searchParams.get("search") || "";
+  const category = searchParams.get("category") || "All Categories";
 
-  const search = searchParams.get("search")
-  const category = searchParams.get("category")
+ 
+
+  const [categories, setCategories] = useState([])
+   
+   useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get("/categories");
+      setCategories(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch categories", err);
+    }
+  };
+
+  fetchCategories();
+}, []);
+
+
 
  useEffect(() => {
   const fetchProducts = async () => {
@@ -129,23 +146,57 @@ export default function ProductListingPage() {
                 </button>
               </div>
 
-              <div className="mb-6">
-                <h3 className="font-semibold text-slate-800 mb-3">Related Categories</h3>
-                <ul className="space-y-2">
-                  <button onClick={() => setSelectedCategory("all")}>All</button>
+             <div className="mb-6">
+  <h3 className="font-semibold text-slate-800 mb-3">
+    Categories
+  </h3>
 
-                  {relatedCategories.map(cat => (
-                 <li key={cat}>
-                     <button
-                  onClick={() => setSelectedCategory(cat.toLowerCase().replace(/\s+/g, "-"))}
-                    className="text-sm text-slate-600 hover:text-primary"
-                 >
-                      {cat}
-                  </button>
-                  </li>
-                  ))}
-                </ul>
-              </div>
+  <ul className="space-y-2">
+    {/* ALL */}
+    <li>
+      <button
+        onClick={() => setSelectedCategory("all")}
+        className={`text-sm font-medium transition ${
+          selectedCategory === "all"
+            ? "text-primary"
+            : "text-slate-600 hover:text-primary"
+        }`}
+      >
+        All Categories
+      </button>
+    </li>
+
+    {/* DYNAMIC CATEGORIES */}
+    {categories.map((cat) => (
+      <li key={cat._id}>
+        <button
+          onClick={() => {
+            setSelectedCategory(cat.slug);
+            navigate(
+              `/products?category=${encodeURIComponent(cat.name)}&search=${encodeURIComponent(search)}`
+            );
+          }}
+          className={`text-sm font-medium transition ${
+            selectedCategory === cat.slug
+              ? "text-primary"
+              : "text-slate-600 hover:text-primary"
+          }`}
+        >
+          {cat.name}
+        </button>
+      </li>
+    ))}
+  </ul>
+</div>
+
+
+
+
+
+
+
+
+
 
               
 

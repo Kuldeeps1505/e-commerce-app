@@ -3,13 +3,14 @@ import mongoose from 'mongoose'
 const enquirySchema = new mongoose.Schema({
   user: {
   type: mongoose.Schema.Types.ObjectId,
-  ref: "User"
+  ref: "User",
+   required: true,
   },
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
   supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: { type: String, required: true },
+  name: { type: String },
+  email: { type: String },
+  phone: { type: String},
   pincode: String,
   enquiryType: { 
     type: String, 
@@ -27,7 +28,8 @@ const enquirySchema = new mongoose.Schema({
   respondedAt: Date,
   respondedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User" // admin
+    ref: "User",
+    required: true // admin
   }
   },
 }, { timestamps: true })

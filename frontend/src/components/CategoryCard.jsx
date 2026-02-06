@@ -1,19 +1,42 @@
-import { Link } from 'react-router-dom'
-
-
- 
+import { motion } from "framer-motion"
+import { Link } from "react-router-dom"
 
 export default function CategoryCard({ category }) {
-  
-
   return (
-    <Link
-      to={`/category/${category.slug}`}
-      className="block bg-surface-elevated rounded-2xl p-6 text-center border border-surface-border shadow-soft hover:shadow-soft-lg hover:border-primary-200 hover:-translate-y-1 transition-all duration-200 group"
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4 }}
     >
-      <div className="text-4xl sm:text-5xl mb-3 group-hover:scale-110 transition-transform">{category.icon}</div>
-      <h3 className="font-semibold text-slate-800 mb-2 group-hover:text-primary transition-colors">{category.name}</h3>
- 
-    </Link>
+      <Link
+        to={`/category/${category.slug}`}
+        className="group relative block rounded-3xl p-[1px] bg-gradient-to-br from-primary/40 to-secondary/40 hover:scale-[1.03] transition-all"
+      >
+        <div className="rounded-3xl bg-white p-6 text-center shadow-lg group-hover:shadow-2xl transition-all">
+          <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
+            {category.icon}
+          </div>
+          <h3 className="font-semibold text-lg text-slate-800 group-hover:text-primary transition-colors">
+            {category.name}
+          </h3>
+        </div>
+      </Link>
+    </motion.div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

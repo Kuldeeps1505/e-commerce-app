@@ -1,18 +1,21 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Package, Users, Globe, TrendingUp } from 'lucide-react'
 import CategoryCard from '../components/CategoryCard'
 import ProductCard from '../components/ProductCard'
+import { motion } from 'framer-motion'
+import api from '../api'
 
-const categories = [
-  { name: 'Ayurveda & Herbal', slug: 'ayurveda', icon: '🌿', },
-  { name: 'Electronics', slug: 'electronics', icon: '💻',},
-  { name: 'Agriculture', slug: 'agriculture', icon: '🌾', },
-  { name: 'Home Accessories', slug: 'home-accessories', icon: '🏠',  },
-  { name: 'Textiles & Garments', slug: 'textiles', icon: '👔', },
-  { name: 'Machinery', slug: 'machinery', icon: '⚙️', },
-  { name: 'Chemicals', slug: 'chemicals', icon: '🧪', },
-  { name: 'Food Products', slug: 'food', icon: '🍎', }
-]
+//const categories = [
+  //{ name: 'Ayurveda & Herbal', slug: 'ayurveda', icon: '🌿', },
+  //{ name: 'Electronics', slug: 'electronics', icon: '💻',},
+  //{ name: 'Agriculture', slug: 'agriculture', icon: '🌾', },
+  //{ name: 'Home Accessories', slug: 'home-accessories', icon: '🏠',  },
+  //{ name: 'Textiles & Garments', slug: 'textiles', icon: '👔', },
+  //{ name: 'Machinery', slug: 'machinery', icon: '⚙️', },
+  //{ name: 'Chemicals', slug: 'chemicals', icon: '🧪', },
+  //{ name: 'Food Products', slug: 'food', icon: '🍎', }
+//]
 
 
 
@@ -24,70 +27,188 @@ const stats = [
   { icon: TrendingUp, label: 'Daily Enquiries', value: '' }
 ]
 
+const gridVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+}
+
+const cardVariants = {
+  hidden: {
+    opacity: 0,
+    y: 30,
+    scale: 0.95,
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+    },
+  },
+}
+
+
+
+
+
+
 export default function HomePage() {
+
+
+  const [categories, setCategories] = useState([])
+const [loading, setLoading] = useState(true)
+
+useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get("/categories")
+      setCategories(res.data)
+    } catch (err) {
+      console.error("Failed to load categories", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  fetchCategories()
+}, [])
+
   return (
     <div className="min-h-screen">
-      <section className="bg-gradient-to-br from-primary-dark via-primary to-primary-500 text-white py-20 sm:py-28 relative overflow-hidden">
-        <div className="absolute inset-0 bg-primary-900/20" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight drop-shadow-sm">
-            Connect with Global Suppliers & Buyers
-          </h1>
-          <p className="text-lg sm:text-xl mb-10 text-primary-100 max-w-2xl mx-auto">
-            India's Leading B2B Marketplace for Import & Export
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/category/all" className="inline-flex items-center justify-center bg-white text-primary px-8 py-3.5 rounded-xl font-semibold hover:bg-primary-50 hover:text-primary-dark transition-all shadow-soft-lg">
-              Explore Products
-            </Link>
-           
-          </div>
-        </div>
-      </section>
+     {/* HERO */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-primary-dark via-primary to-primary-500 text-white">
+  
+  {/* Glow blobs */}
+  <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl animate-pulse" />
+  <div className="absolute bottom-0 -right-40 w-[400px] h-[400px] bg-secondary/20 rounded-full blur-3xl animate-pulse delay-1000" />
 
-      <section className="py-16 sm:py-20 bg-surface-muted">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-            {stats.map((stat, idx) => (
-              <div key={idx} className="text-center p-6 bg-surface-elevated rounded-2xl shadow-soft border border-surface-border hover:shadow-soft-lg hover:border-primary-200 transition-all">
-                <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary-100 flex items-center justify-center">
-                  <stat.icon className="w-7 h-7 text-primary" />
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-slate-800">{stat.value}</div>
-                <div className="text-sm text-slate-500 mt-1">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+  <div className="relative z-10 max-w-7xl mx-auto px-6 py-28 text-center">
+    
+    <motion.h1
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight"
+    >
+      Powering <span className="text-secondary-light">Global Trade</span>  
+      <br /> for Modern Businesses
+    </motion.h1>
 
-      <section className="py-16 sm:py-20 bg-surface">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">Browse by Category</h2>
-            <Link to="/category/all" className="text-primary font-semibold hover:text-primary-dark flex items-center gap-1 transition-colors">
-              View All <ArrowRight size={18} />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {categories.map(category => (
-              <CategoryCard key={category.slug} category={category} />
-            ))}
-          </div>
-        </div>
-      </section>
+    <motion.p
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="mt-6 text-lg sm:text-xl text-primary-100 max-w-2xl mx-auto"
+    >
+      Discover verified suppliers, premium products & grow beyond borders.
+    </motion.p>
 
-      <section className="py-16 sm:py-20 bg-gradient-to-br from-secondary-dark via-secondary to-secondary-light text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ready to Grow Your Business?</h2>
-          <p className="text-lg text-secondary-100 mb-8 max-w-xl mx-auto opacity-95">
-            Join thousands of suppliers reaching buyers worldwide
-          </p>
-          <Link to="/become-supplier" className="inline-block bg-white text-secondary-dark px-8 py-3.5 rounded-xl font-semibold hover:bg-secondary-50 hover:text-secondary-dark transition-all shadow-soft-lg">
-            Register as Supplier
-          </Link>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: 0.6 }}
+      className="mt-10 flex justify-center"
+    >
+      <Link
+        to="/category/all"
+        className="group flex items-center gap-2 bg-white text-primary px-8 py-4 rounded-2xl font-semibold shadow-2xl hover:shadow-primary/40 transition-all"
+      >
+        Explore Marketplace
+        <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+      </Link>
+    </motion.div>
+
+  </div>
+</section>
+
+          {/* STATS */}
+
+<section className="relative -mt-16 z-20">
+  <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-6">
+    {stats.map((stat, i) => (
+      <motion.div
+        key={i}
+        whileHover={{ y: -8 }}
+        className="backdrop-blur-xl bg-white/70 rounded-3xl p-6 shadow-xl border border-white/40 text-center"
+      >
+        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <stat.icon className="text-primary w-7 h-7" />
         </div>
-      </section>
+        <p className="text-3xl font-bold text-slate-800">{stat.value}</p>
+        <p className="text-sm text-slate-500 mt-1">{stat.label}</p>
+      </motion.div>
+    ))}
+  </div>
+</section>
+    
+    <section className="py-20 bg-surface">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div className="flex justify-between items-center mb-10">
+      <h2 className="text-3xl font-bold text-slate-800">
+        Browse by Category
+      </h2>
+      <Link
+        to="/category/all"
+        className="text-primary font-semibold hover:text-primary-dark transition"
+      >
+        View All →
+      </Link>
+    </div>
+
+    <motion.div
+      variants={gridVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true }}
+      className="grid grid-cols-2 md:grid-cols-4 gap-6"
+    >
+      {categories.map((category) => (
+        <motion.div
+          key={category.slug}
+          variants={cardVariants}
+          whileHover={{
+            scale: 1.06,
+            y: -8,
+          }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
+          <CategoryCard category={category} />
+        </motion.div>
+      ))}
+    </motion.div>
+
+  </div>
+</section>
+
+    <section className="py-24 bg-gradient-to-br from-secondary-dark to-secondary-light text-white text-center">
+  <motion.h2
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    className="text-3xl sm:text-4xl font-extrabold"
+  >
+    Bringing Global Products Within Your Reach Today
+  </motion.h2>
+
+  <p className="mt-4 text-secondary-100 max-w-xl mx-auto">
+    Connect, Enquire, and Expand Your Reach Globally
+  </p>
+
+  <Link
+    to="/signup"
+    className="inline-block mt-8 bg-white text-secondary-dark px-10 py-4 rounded-2xl font-semibold shadow-xl hover:scale-105 transition-transform"
+  >
+    Register Now
+  </Link>
+</section>
     </div>
   )
 }

@@ -2,6 +2,7 @@ import express from 'express'
 import Enquiry from '../models/Enquiry.js'
 import Product from '../models/Product.js'
 
+import { protect } from "../middleware/auth.js";
 
 
 const router = express.Router()
@@ -10,7 +11,10 @@ router.get('/', async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query
     const query = status ? { status } : {}
-    
+
+      if (req.user.role !== "admin") {
+      query.user = req.user._id;
+    }
     const enquiries = await Enquiry.find(query)
       .populate('product')
       .limit(limit * 1)
@@ -40,7 +44,7 @@ router.post('/', async (req, res) => {
 
     const enquiry = new Enquiry({
          ...req.body,
-        user: req.user ? req.user._id : null
+        user: req.user._id || null
     });
     
     const savedEnquiry = await enquiry.save()

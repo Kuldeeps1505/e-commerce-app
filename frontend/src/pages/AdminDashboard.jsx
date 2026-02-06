@@ -46,6 +46,12 @@ const [loadingSuppliers, setLoadingSuppliers] = useState(false);
   const [supplierComments, setSupplierComments] = useState({});
   const [sendingReplyId, setSendingReplyId] = useState(null);
   const [updatingSupplierId, setUpdatingSupplierId] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [showEditProduct, setShowEditProduct] = useState(false);
+  
+  const [showEditCategory, setShowEditCategory] = useState(false);
+const [editingCategory, setEditingCategory] = useState(null);
+
 
 
   useEffect(() => {
@@ -218,6 +224,31 @@ const fetchSuppliers = async () => {
     }
   }
 
+
+  const handleEditCategory = async () => {
+  try {
+    const payload = {
+      name: editingCategory.name,
+      icon: editingCategory.icon,
+      description: editingCategory.description
+    };
+
+    await api.put(`/categories/${editingCategory._id}`, payload);
+
+    await fetchCategories(); // refresh list
+
+    setShowEditCategory(false);
+    setEditingCategory(null);
+
+    alert("✅ Category updated successfully");
+
+  } catch (error) {
+    console.error("❌ Category update failed:", error.response?.data || error.message);
+    alert("❌ Failed to update category");
+  }
+};
+
+
   const setReplyText = (enquiryId, value) => {
     setReplyTexts((prev) => ({ ...prev, [enquiryId]: value }));
   };
@@ -296,7 +327,7 @@ const fetchSuppliers = async () => {
         <div className="bg-surface-elevated rounded-2xl shadow-soft border border-surface-border overflow-hidden mb-8">
           <div className="border-b border-surface-border overflow-x-auto">
             <div className="flex gap-1 sm:gap-2 px-4 sm:px-6 min-w-max">
-              {['overview', 'products', 'categories', 'enquiries', 'suppliers'].map((tab) => (
+              {['overview', 'products', 'categories', 'enquiries'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -516,6 +547,85 @@ const fetchSuppliers = async () => {
                   </div>
                 )}
               
+
+              {showEditProduct && editingProduct && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white w-full max-w-2xl rounded-xl p-6 relative">
+      
+      <h3 className="text-xl font-bold mb-4">Edit Product</h3>
+
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          await api.put(`/products/${editingProduct._id}`, editingProduct);
+          setShowEditProduct(false);
+          fetchProducts(); // refresh list
+        }}
+        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+      >
+        <input
+          className="input-field"
+          value={editingProduct.name}
+          onChange={e => setEditingProduct({ ...editingProduct, name: e.target.value })}
+        />
+
+        <select
+          className="input-field"
+          value={editingProduct.category?._id || editingProduct.category}
+          onChange={e => setEditingProduct({ ...editingProduct, category: e.target.value })}
+        >
+          {categories.map(cat => (
+            <option key={cat._id} value={cat._id}>{cat.name}</option>
+          ))}
+        </select>
+
+        <input
+          type="number"
+          className="input-field"
+          value={editingProduct.price?.min}
+          onChange={e => setEditingProduct({
+            ...editingProduct,
+            price: { ...editingProduct.price, min: e.target.value }
+          })}
+        />
+
+        <input
+          type="number"
+          className="input-field"
+          value={editingProduct.price?.max}
+          onChange={e => setEditingProduct({
+            ...editingProduct,
+            price: { ...editingProduct.price, max: e.target.value }
+          })}
+        />
+
+        <textarea
+          className="input-field md:col-span-2"
+          value={editingProduct.description}
+          onChange={e => setEditingProduct({ ...editingProduct, description: e.target.value })}
+        />
+
+        <div className="md:col-span-2 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => setShowEditProduct(false)}
+            className="px-4 py-2 bg-gray-200 rounded-lg"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+          >
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {products.length === 0 ? (
                     <div className="text-gray-500 col-span-full text-center py-8">
@@ -543,12 +653,25 @@ const fetchSuppliers = async () => {
                           <span className="font-medium">Category:</span> {product.category?.name || product.category}
                         </div>
                        
-                        <button 
-                          onClick={() => handleDeleteProduct(product._id)}
-                          className="w-full bg-red-400 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-500"
-                        >
-                          Delete Product
-                        </button>
+                       <div className="flex gap-2 mt-3">
+  <button
+    onClick={() => {
+      setEditingProduct(product);
+      setShowEditProduct(true);
+    }}
+    className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
+  >
+    Edit
+  </button>
+
+  <button 
+    onClick={() => handleDeleteProduct(product._id)}
+    className="flex-1 bg-red-400 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-500 transition"
+  >
+    Delete
+  </button>
+</div>
+                       
                       </div>
                     ))
                   )}
@@ -645,20 +768,108 @@ const fetchSuppliers = async () => {
                             <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
                               {category.description || '-'}
                             </td>
-                            <button 
+
+                            <button
+  onClick={() => {
+    setEditingCategory(category);
+    setShowEditCategory(true);
+  }}
+  className="flex-1 bg-blue-500 text-white px-5 py-3 rounded-lg text-sm hover:bg-blue-600 transition"
+>
+  Edit
+</button> 
+                         
+                         
+                          <button 
                           onClick={() => handleDeleteCategory(category._id)}
-                          className="w-full bg-red-400 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-500"
+                          className="flex-1 bg-red-400 text-white px-5 py-3 rounded-lg text-sm hover:bg-red-500 transition"
                         >
                           Delete Category
                         </button>
+                      
                           </tr>
                         ))
                       )}
                     </tbody>
                   </table>
                 </div>
+
+                {showEditCategory && editingCategory && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-xl shadow-lg w-full max-w-lg p-6">
+      <h3 className="text-xl font-bold mb-4">Edit Category</h3>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleEditCategory();
+        }}
+        className="space-y-4"
+      >
+        <div>
+          <label className="block text-sm font-medium mb-1">Category Name *</label>
+          <input
+            type="text"
+            value={editingCategory.name}
+            onChange={(e) =>
+              setEditingCategory({ ...editingCategory, name: e.target.value })
+            }
+            className="input-field"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Icon</label>
+          <input
+            type="text"
+            value={editingCategory.icon || ""}
+            onChange={(e) =>
+              setEditingCategory({ ...editingCategory, icon: e.target.value })
+            }
+            className="input-field"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Description</label>
+          <textarea
+            rows="3"
+            value={editingCategory.description || ""}
+            onChange={(e) =>
+              setEditingCategory({ ...editingCategory, description: e.target.value })
+            }
+            className="input-field"
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              setShowEditCategory(false);
+              setEditingCategory(null);
+            }}
+            className="px-4 py-2 border rounded-lg"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="btn-primary px-5 py-2"
+          >
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
               </div>
             )}
+            
 
             {activeTab === 'enquiries' && (
               <div>
@@ -727,86 +938,6 @@ const fetchSuppliers = async () => {
               </div>
             )}
 
-            {activeTab === 'suppliers' && (
-              <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-6">Supplier Requests</h3>
-                {suppliers.length === 0 ? (
-                  <div className="text-center py-12 bg-surface-muted rounded-xl border-2 border-dashed border-surface-border">
-                    <Users className="w-12 h-12 mx-auto text-primary-300 mb-3" />
-                    <p className="text-slate-500">No supplier requests found.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {suppliers.map((supplier) => (
-                      <div key={supplier._id} className="border border-surface-border rounded-xl bg-surface-elevated shadow-soft overflow-hidden hover:shadow-soft-lg hover:border-primary-200 transition-all flex flex-col">
-                        <div className="p-5 flex-1">
-                          <div className="flex items-center gap-2 mb-3">
-                            <h4 className="font-semibold text-primary text-lg">{supplier.companyName}</h4>
-                            <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                              supplier.status === 'pending' ? 'bg-amber-100 text-amber-800' :
-                              supplier.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {supplier.status}
-                            </span>
-                          </div>
-                          <ul className="space-y-1.5 text-sm text-gray-700">
-                            <li><span className="font-medium text-gray-600">Contact:</span> {supplier.contactPerson}</li>
-                            <li><span className="font-medium text-gray-600">Email:</span> {supplier.email}</li>
-                            <li><span className="font-medium text-gray-600">Phone:</span> {supplier.phone}</li>
-                            <li><span className="font-medium text-gray-600">Business:</span> {supplier.businessType}</li>
-                            <li><span className="font-medium text-gray-600">Category:</span> {supplier.categoryOption || 'N/A'}</li>
-                            {supplier.productDescription && (
-                              <li className="text-gray-600 truncate" title={supplier.productDescription}>
-                                <span className="font-medium text-gray-600">Description:</span> {supplier.productDescription}
-                              </li>
-                            )}
-                          </ul>
-                          {supplier.address && (supplier.address.city || supplier.address.state) && (
-                            <p className="text-xs text-gray-500 mt-2">
-                              {[supplier.address.street, supplier.address.city, supplier.address.state, supplier.address.country, supplier.address.pincode].filter(Boolean).join(', ')}
-                            </p>
-                          )}
-                          {supplier.adminComment && (
-                            <div className="mt-3 p-2 bg-gray-100 rounded text-xs text-gray-700">
-                              <strong>Admin comment:</strong> {supplier.adminComment}
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-4 bg-primary-50/50 border-t border-surface-border space-y-3">
-                          <input
-                            type="text"
-                            placeholder="Comment (optional)"
-                            className="input-field text-sm"
-                            value={supplierComments[supplier._id] ?? ''}
-                            onChange={(e) => setSupplierComment(supplier._id, e.target.value)}
-                          />
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={() => updateSupplierStatus(supplier._id, 'approved')}
-                              disabled={updatingSupplierId === supplier._id}
-                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors"
-                            >
-                              <CheckCircle size={18} />
-                              Approve
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => updateSupplierStatus(supplier._id, 'rejected')}
-                              disabled={updatingSupplierId === supplier._id}
-                              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
-                            >
-                              <XCircle size={18} />
-                              Reject
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </div>

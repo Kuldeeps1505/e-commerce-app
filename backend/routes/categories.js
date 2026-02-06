@@ -71,6 +71,13 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
+    const { name, icon, description } = req.body;
+
+    if (!name) {
+  return res.status(400).json({ error: "Category name is required" });
+}
+
+
     const category = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true })
     res.json(category )
   } catch (error) {

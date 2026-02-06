@@ -5,18 +5,8 @@ import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import Category from '../../../backend/models/Category';
 //import {useNavigate} from "react-router-dom";
+import api from '../api'
 
-const categories = [
-  'All Categories',
-  'Ayurveda & Herbal',
-  'Electronics',
-  'Agriculture',
-  'Home Accessories',
-  'Textiles',
-  'Machinery',
-  'Chemicals',
-  'Food Products'
-]
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -24,6 +14,9 @@ export default function Navbar() {
   const [selectedCategory, setSelectedCategory] = useState('All Categories')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All Categories");
   const navigate = useNavigate()
 
    const syncAuth = () => {
@@ -46,125 +39,157 @@ export default function Navbar() {
   }, [])
 
   
-  
-  
-  const handleSearch = (e) => {
-  e.preventDefault()
+  useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get("/categories");
+      setCategories(res.data);
+    } catch (err) {
+      console.error("Failed to load categories", err);
+    }
+  };
 
-  const params = new URLSearchParams()
+  fetchCategories();
+}, []);
 
-  if (searchQuery.trim()) {
-    params.append("search", searchQuery.trim())
+  const handleSearch = async () => {
+  if (!search.trim()) return
+
+  try {
+    const res = await api.get(
+      `/products/search-one?name=${encodeURIComponent(search)}`
+    )
+
+    // redirect to product detail page
+    navigate(`/product/${res.data.name}`)
+  } catch (err) {
+    if (err.response?.status === 404) {
+      toast.error("Product not available. Try another.")
+    } else {
+      toast.error("Something went wrong")
+    }
   }
-
-  if (selectedCategory !== "All Categories") {
-    params.append("category", selectedCategory)
-  }
-
-  navigate(`/products?${params.toString()}`)
 }
+
 
   
   
 
   return (
-    <nav className="bg-surface-elevated/95 backdrop-blur-md shadow-soft sticky top-0 z-50 border-b border-surface-border">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <nav className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b border-slate-200 shadow-sm">
+   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-primary to-primary-dark rounded-xl flex items-center justify-center shadow-primary">
-              <span className="text-white font-bold text-lg sm:text-xl">B2B</span>
-            </div>
-            <span className="font-bold text-lg sm:text-xl text-slate-800 hidden sm:block">TradeHub</span>
+          <Link to="/" className="flex items-center gap-3 group">
+           <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center shadow-md group-hover:scale-110 transition-transform duration-300">
+           <span className="text-white font-extrabold text-lg">B2B</span>
+           </div>
+            <span className="hidden sm:block font-bold text-xl text-slate-800 tracking-tight">
+           TradeHub
+           </span>
           </Link>
 
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-2xl mx-8">
-             <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2 border border-r-0 border-surface-border rounded-l-xl focus:outline-none bg-primary-50 text-slate-700 text-sm"
-            >
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-            <input
-              type="text"
-              placeholder="Search products / services"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 px-4 py-2 border border-surface-border focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-r-xl text-slate-800 placeholder-slate-400"
-            />
-            <button type="submit" className="bg-primary text-white px-6 py-2 rounded-r-xl hover:bg-primary-dark transition-colors shadow-soft">
-              <Search size={20} />
-            </button>
-          </form>
+    <form onSubmit={handleSearch} className="flex gap-3">
+  <select
+    value={category}
+    onChange={(e) => setCategory(e.target.value)}
+    className="border rounded-lg px-3"
+  >
+    <option>All Categories</option>
+    {categories.map(cat => (
+      <option key={cat._id}>{cat.name}</option>
+    ))}
+  </select>
 
-          <div className="hidden lg:flex items-center gap-3">
-            {isLoggedIn ? (
-              <Link to="/profile" className="flex items-center gap-2 px-4 py-2 rounded-xl text-slate-700 hover:bg-primary-50 hover:text-primary transition-colors font-medium">
-                <UserCircle size={20} className="text-primary" />
-                <span>My Profile</span>
-              </Link>
-            ) : (
-              <button onClick={() => navigate("/login")} className="flex items-center gap-2 text-slate-700 hover:text-primary transition-colors font-medium">
-                <User size={18} />
-                <span>Login</span>
-              </button>
-            )}
-           
-          </div>
+  <input
+    type="text"
+    placeholder="Search products..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="border rounded-lg px-4"
+  />
 
-          <button
-            className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-primary-50 hover:text-primary transition-colors"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+  <button  type="submit" className="btn-primary">
+    Search
+  </button>
+</form>
+
+
+ <div className="hidden lg:flex items-center gap-4">
+  {isLoggedIn ? (
+    <Link
+      to="/profile"
+      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-50 hover:bg-primary-50 text-slate-700 hover:text-primary transition-all font-medium"
+    >
+      <UserCircle size={20} />
+      My Profile
+    </Link>
+  ) : (
+    <button
+      onClick={() => navigate("/login")}
+      className="px-5 py-2 rounded-xl bg-primary text-white hover:bg-primary-dark transition-all shadow-md"
+    >
+      Login
+    </button>
+  )}
+</div>
+      <button
+  className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-primary-50 transition"
+  onClick={() => setIsMenuOpen(!isMenuOpen)}
+>
+  {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+</button>
         </div>
+    {isMenuOpen && (
+  <div className="lg:hidden mt-3 p-4 rounded-2xl bg-white shadow-lg border border-slate-200 animate-[fadeIn_0.2s_ease-out]">
+    
+    <form onSubmit={handleSearch} className="space-y-3">
+      <select
+        value={selectedCategory}
+        onChange={(e) => setSelectedCategory(e.target.value)}
+        className="w-full px-4 py-2 rounded-xl border border-slate-200"
+      >
+        {categories.map(cat => (
+          <option key={cat} value={cat}>{cat}</option>
+        ))}
+      </select>
 
-        {isMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-surface-border bg-surface-muted/50">
-            <form onSubmit={handleSearch} className="mb-4 px-1">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-2.5 border border-surface-border rounded-xl mb-2 bg-white text-slate-700 text-sm"
-              >
-                {categories.map(Category => (
-                  <option key={Category.slug} value={Category.slug}>{Category.name}</option>
-                ))}
-              </select>
-              <div className="flex">
-                <input
-                  type="text"
-                  placeholder="Search products"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 px-4 py-2.5 border border-r-0 border-surface-border rounded-l-xl text-slate-800"
-                />
-                <button type="submit" className="bg-primary text-white px-4 py-2.5 rounded-r-xl">
-                  <Search size={20} />
-                </button>
-              </div>
-            </form>
-            <div className="space-y-2 px-1">
-              {isLoggedIn ? (
-                <Link to="/profile" className="flex items-center gap-2 w-full px-4 py-3 hover:bg-primary-50 rounded-xl font-medium text-slate-700 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>
-                  <UserCircle size={20} className="text-primary" />
-                  My Profile
-                </Link>
-              ) : (
-                <button className="flex items-center gap-2 w-full px-4 py-3 hover:bg-primary-50 rounded-xl font-medium text-slate-700 hover:text-primary transition-colors" onClick={() => { setIsMenuOpen(false); navigate("/login"); }}>
-                  <User size={20} />
-                  Login
-                </button>
-              )}
-            
-            </div>
-          </div>
-        )}
+      <div className="flex">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="flex-1 px-4 py-2 rounded-l-xl border border-r-0 border-slate-200"
+        />
+        <button className="px-4 bg-primary text-white rounded-r-xl">
+          <Search size={18} />
+        </button>
       </div>
+    </form>
+
+    <div className="mt-4">
+      {isLoggedIn ? (
+        <Link
+          to="/profile"
+          onClick={() => setIsMenuOpen(false)}
+          className="block w-full text-center py-3 rounded-xl bg-slate-50 hover:bg-primary-50 transition"
+        >
+          My Profile
+        </Link>
+      ) : (
+        <button
+          onClick={() => navigate("/login")}
+          className="w-full py-3 rounded-xl bg-primary text-white"
+        >
+          Login
+        </button>
+      )}
+    </div>
+
+  </div>
+)}
+
+   </div>     
     </nav>
   )
 }

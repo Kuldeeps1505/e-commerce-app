@@ -35,40 +35,44 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-gradient-to-b from-primary-50/50 to-surface-muted">
-      <div className="w-full max-w-md bg-surface-elevated p-8 sm:p-10 rounded-2xl shadow-soft-lg border border-surface-border">
-        <h2 className="text-2xl font-bold mb-2 text-center text-slate-800">Welcome back</h2>
-        <p className="text-center text-slate-500 text-sm mb-8">Sign in to access your profile</p>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12 bg-gradient-to-b from-primary-50/60 to-surface-muted">
+      <div className="w-full max-w-md bg-white/70 backdrop-blur-md p-10 rounded-3xl shadow-xl border border-slate-200">
+        <h2 className="text-3xl font-bold mb-2 text-center text-slate-900 drop-shadow-sm">Welcome Back</h2>
+        <p className="text-center text-slate-500 mb-8 text-sm">Sign in to access your profile</p>
+
+        <form onSubmit={(e) => handleSubmit(e, form)} className="flex flex-col gap-5">
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-slate-700 mb-1">Email</label>
             <input
               type="email"
               placeholder="you@example.com"
-              className="input-field"
+              className="px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary/40 focus:border-primary transition outline-none bg-white/70"
               required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-slate-700 mb-1">Password</label>
             <input
               type="password"
               placeholder="••••••••"
-              className="input-field"
+              className="px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-primary/40 focus:border-primary transition outline-none bg-white/70"
               required
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
             />
           </div>
+
           <button
             type="submit"
-            className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark transition-all shadow-soft hover:shadow-primary"
+            className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary-dark shadow-md hover:shadow-lg transition-all"
           >
             Login
           </button>
         </form>
+
         <p className="text-sm text-center mt-6 text-slate-500">
           Don’t have an account?{" "}
           <Link to="/signup" className="text-primary font-semibold hover:text-primary-dark hover:underline transition-colors">
@@ -79,3 +83,12 @@ export default function Login() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+    
