@@ -185,31 +185,7 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          <div>
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-20">
-              <div className="flex items-center mb-4">
-                <CheckCircle className="text-green-500 mr-2" size={24} />
-                <span className="font-semibold text-lg">Verified Supplier</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">{supplierName}</h3>
-              <div className="text-sm text-gray-600 space-y-2 mb-4">
-                <div className="flex items-center">
-                  <MapPin size={16} className="mr-2" />
-                  {supplierLocation}
-                </div>
-                {product.supplier?.businessType && (
-                  <div>Business Type: {product.supplier.businessType.charAt(0).toUpperCase() + product.supplier.businessType.slice(1)}</div>
-                )}
-                <div>Years in Business: 15+ Years</div>
-              </div>
-              <button
-                onClick={() => setShowEnquiryModal(true)}
-                className="w-full btn-primary py-3 mb-2"
-              >
-                Contact Supplier
-              </button>
-            </div>
-          </div>
+          
         </div>
 
         <div className="mt-12">

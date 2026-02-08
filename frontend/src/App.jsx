@@ -11,14 +11,23 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import { AuthProvider } from "./context/AuthContext";
 import Profile from './pages/Profile'
-  
+  import { Toaster } from "react-hot-toast"
+import Messages  from './pages/Messages'
+  import { useLocation } from 'react-router-dom'
 function App() {
+
+    const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith('/admin')
   return (
     <AuthProvider>
-      <Router>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
+      <div className="flex flex-col min-h-screen">
+        
+        
+        {!isAdminRoute && <Navbar />}
+
         <main className="flex-grow">
+          <Toaster position="top-right" />
+
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/category/:categorySlug" element={<ProductListingPage />} />
@@ -27,14 +36,30 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute>
+                  <Messages />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </main>
-        <Footer />
+
+        {!isAdminRoute && <Footer />}
       </div>
-    </Router>
     </AuthProvider>
-  )
+  );
 }
+
 
 export default App

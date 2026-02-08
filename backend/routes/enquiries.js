@@ -7,7 +7,7 @@ import { protect } from "../middleware/auth.js";
 
 const router = express.Router()
 
-router.get('/', async (req, res) => {
+router.get('/',protect, async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query
     const query = status ? { status } : {}
@@ -34,7 +34,7 @@ router.get('/', async (req, res) => {
   }
 })
 
-router.post('/', async (req, res) => {
+router.post('/',protect, async (req, res) => {
   try {
     const { product, name, email, phone, message } = req.body
     
@@ -44,7 +44,9 @@ router.post('/', async (req, res) => {
 
     const enquiry = new Enquiry({
          ...req.body,
-        user: req.user._id || null
+        user: req.user._id,
+        product: productId,
+        message
     });
     
     const savedEnquiry = await enquiry.save()

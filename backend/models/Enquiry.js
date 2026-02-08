@@ -29,7 +29,7 @@ const enquirySchema = new mongoose.Schema({
   respondedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true // admin
+     // admin
   }
   },
 }, { timestamps: true })

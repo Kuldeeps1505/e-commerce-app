@@ -13,14 +13,15 @@ export default function CategoryCard({ category }) {
         to={`/category/${category.slug}`}
         className="group relative block rounded-3xl p-[1px] bg-gradient-to-br from-primary/40 to-secondary/40 hover:scale-[1.03] transition-all"
       >
-        <div className="rounded-3xl bg-white p-6 text-center shadow-lg group-hover:shadow-2xl transition-all">
-          <div className="text-5xl mb-4 group-hover:scale-110 transition-transform">
-            {category.icon}
-          </div>
+        <img
+        src={category.image}
+        alt={category.name}
+        className="w-full h-40 object-cover"
+      />
           <h3 className="font-semibold text-lg text-slate-800 group-hover:text-primary transition-colors">
             {category.name}
           </h3>
-        </div>
+        
       </Link>
     </motion.div>
   )

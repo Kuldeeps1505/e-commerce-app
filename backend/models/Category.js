@@ -4,7 +4,7 @@ import slugify from 'slugify';
 const categorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   slug: { type: String, unique: true },
-  icon: String,
+  image: { type: String, required: true },
   description: String,
   parent: {
     type: mongoose.Schema.Types.ObjectId,

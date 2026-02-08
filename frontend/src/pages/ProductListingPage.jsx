@@ -147,9 +147,7 @@ export default function ProductListingPage() {
               </div>
 
              <div className="mb-6">
-  <h3 className="font-semibold text-slate-800 mb-3">
-    Categories
-  </h3>
+  
 
   <ul className="space-y-2">
     {/* ALL */}

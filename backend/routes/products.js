@@ -65,9 +65,9 @@ router.post('/', async (req, res) => {
   try {
     // Validate required fields
     const { name, slug, description, category, price, moq } = req.body
-    if (!name || !slug || !description || !category || !price || !moq) {
+    if (!name || !slug || !description || !category || !price || !moq  ) {
       return res.status(400).json({ 
-        error: 'Missing required fields: name, slug, description, category, price, moq' 
+        error: 'Missing required fields: name, slug, description, category, price, moq, images' 
       })
     }
 

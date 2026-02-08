@@ -1,227 +1,475 @@
-import { useEffect, useState, useContext } from "react";
-import { UserCircle, MessageSquare ,  LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import api from "../api";
-import { AuthContext } from "../context/AuthContext";
+import { useEffect, useState, useContext } from "react"
+import { 
+  UserCircle, 
+  MessageSquare, 
+  LogOut, 
+  Mail, 
+  Calendar, 
+  Shield,
+  MapPin,
+  Phone,
+  Edit,
+  Package,
+  ShoppingBag,
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Building
+} from "lucide-react"
+import { useNavigate, Link } from "react-router-dom"
+import api from "../api"
+import { AuthContext } from "../context/AuthContext"
 import { motion } from "framer-motion"
-
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 },
 }
+
+const stagger = {
+  visible: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+}
+
 export default function Profile() {
+  const [enquiries, setEnquiries] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    totalEnquiries: 0,
+    replied: 0,
+    pending: 0,
+    totalOrders: 0
+  })
 
-const [enquiries, setEnquiries] = useState([])
-const [loading, setLoading] = useState(true);
+  const navigate = useNavigate()
+  const { user: authUser, setUser, logout } = useContext(AuthContext)
 
-const totalEnquiries = enquiries.length
-const replied = enquiries.filter(e => e.adminResponse?.message).length 
-
-
-
-
-  // ✅ ALL HOOKS AT TOP (NO EXCEPTIONS)
-  const navigate = useNavigate();
-  const { user: authUser, setUser, logout } = useContext(AuthContext);
-
-  
-
-
-  // ✅ DATA FETCH
+  // Fetch Profile
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await api.get("/profile/me");
-        setUser(res.data.user);          // sync auth context
-        
+        const res = await api.get("/profile/me")
+        setUser(res.data.user)
       } catch (error) {
-        console.error("Failed to load profile", error);
+        console.error("Failed to load profile", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-
-    fetchProfile();
-  }, [setUser]);
-
- 
-  useEffect(() => {
-  const fetchEnquiries = async () => {
-    try {
-      const res = await api.get("/enquiries");
-
-      // ✅ FIX HERE
-      setEnquiries(res.data.enquiries || []);
-      // OR if your backend sends { data: [...] }
-      // setEnquiries(res.data.data || []);
-
-    } catch (err) {
-      console.error("Enquiry fetch failed", err);
-      setEnquiries([]); // safety
     }
-  };
 
-  fetchEnquiries();
-}, []);
+    fetchProfile()
+  }, [setUser])
 
+  // Fetch Enquiries
+  useEffect(() => {
+    const fetchEnquiries = async () => {
+      try {
+        const res = await api.get("/enquiries")
+        const enquiriesData = res.data.enquiries || []
+        setEnquiries(enquiriesData)
+        
+        // Calculate stats
+        const totalEnquiries = enquiriesData.length
+        const replied = enquiriesData.filter(e => e.adminResponse?.message).length
+        setStats({
+          totalEnquiries,
+          replied,
+          pending: totalEnquiries - replied,
+          totalOrders: 0 // TODO: Fetch from orders API
+        })
+      } catch (err) {
+        console.error("Enquiry fetch failed", err)
+        setEnquiries([])
+      }
+    }
 
-  // ✅ LOGOUT HANDLER
+    fetchEnquiries()
+  }, [])
+
+  // Logout Handler
   const handleLogout = () => {
-    logout(); // clears context + localStorage
-    window.dispatchEvent(new Event("auth-change"));
-    navigate("/login");
-  };
+    logout()
+    window.dispatchEvent(new Event("auth-change"))
+    navigate("/login")
+  }
 
-  // ✅ SAFE RETURNS (AFTER ALL HOOKS)
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A"
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    })
+  }
+
+  // Loading State
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <p className="text-slate-500">Loading profile...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 font-medium">Loading your profile...</p>
+        </div>
       </div>
-    );
+    )
   }
 
   if (!authUser) {
     return (
-      <div className="text-center py-12">
-        <p className="text-slate-600">Unable to load profile.</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-slate-600 text-lg">Unable to load profile.</p>
+          <Link to="/login" className="text-primary hover:underline mt-2 inline-block">
+            Please login again
+          </Link>
+        </div>
       </div>
-    );
+    )
   }
 
-  // ✅ MAIN UI
   return (
-     <div className="min-h-screen bg-slate-50">
-
-      {/* HEADER */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      
+      {/* Header Banner */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+        className="bg-gradient-to-r from-primary via-primary-dark to-blue-900 text-white relative overflow-hidden"
       >
-        <div className="max-w-6xl mx-auto px-6 py-10">
-          <h1 className="text-3xl font-bold">My Profile</h1>
-          <p className="text-blue-100 mt-1">
-            Manage your account & enquiries
+        {/* Decorative elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-6 py-12">
+          <h1 className="text-4xl font-black mb-2">My Account</h1>
+          <p className="text-blue-100 text-lg">
+            Manage your profile, enquiries, and business activities
           </p>
         </div>
       </motion.div>
 
-      <div className="max-w-6xl mx-auto px-6 py-10 space-y-10">
+      <div className="max-w-7xl mx-auto px-6 py-10">
+        <div className="grid lg:grid-cols-3 gap-8">
+          
+          {/* Left Column - Profile Card */}
+          <div className="lg:col-span-1 space-y-6">
+            
+            {/* Profile Info Card */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ duration: 0.4 }}
+              className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden"
+            >
+              {/* Profile Header */}
+              <div className="bg-gradient-to-br from-primary to-primary-dark p-6 text-white">
+                <div className="flex justify-center mb-4">
+                  <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border-4 border-white/30">
+                    <UserCircle className="w-16 h-16 text-white" />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold text-center">{authUser.name}</h2>
+                <p className="text-blue-100 text-center text-sm mt-1">
+                  {authUser.role === 'supplier' ? '🏢 Supplier' : authUser.role === 'buyer' ? '🛒 Buyer' : '👤 User'}
+                </p>
+              </div>
 
-        {/* PROFILE CARD */}
-        <motion.section
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          transition={{ duration: 0.4 }}
-          className="bg-white rounded-2xl shadow-sm p-6 flex items-center gap-6"
-        >
-          <UserCircle className="w-20 h-20 text-blue-600" />
+              {/* Profile Details */}
+              <div className="p-6 space-y-4">
+                <div className="flex items-start gap-3">
+                  <Mail className="w-5 h-5 text-slate-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-500 font-medium">Email</p>
+                    <p className="text-sm text-slate-800 break-all">{authUser.email}</p>
+                  </div>
+                </div>
 
-          <div className="flex-1">
-            <p className="text-xl font-semibold text-slate-800">
-              {authUser.name}
-            </p>
-            <p className="text-slate-500">{authUser.email}</p>
-          </div>
+                {authUser.phone && (
+                  <div className="flex items-start gap-3">
+                    <Phone className="w-5 h-5 text-slate-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-xs text-slate-500 font-medium">Phone</p>
+                      <p className="text-sm text-slate-800">{authUser.phone}</p>
+                    </div>
+                  </div>
+                )}
 
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-          >
-            <LogOut size={18} />
-            Logout
-          </button>
-        </motion.section>
+                {authUser.company && (
+                  <div className="flex items-start gap-3">
+                    <Building className="w-5 h-5 text-slate-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-xs text-slate-500 font-medium">Company</p>
+                      <p className="text-sm text-slate-800">{authUser.company}</p>
+                    </div>
+                  </div>
+                )}
 
-        {/* STATS */}
-        <motion.section
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6"
-        >
-          <div className="bg-white p-5 rounded-xl border">
-            <p className="text-sm text-slate-500">Total Enquiries</p>
-            <p className="text-2xl font-bold">{totalEnquiries}</p>
-          </div>
+                {authUser.location && (
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-5 h-5 text-slate-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-xs text-slate-500 font-medium">Location</p>
+                      <p className="text-sm text-slate-800">{authUser.location}</p>
+                    </div>
+                  </div>
+                )}
 
-          <div className="bg-white p-5 rounded-xl border">
-            <p className="text-sm text-slate-500">Replied</p>
-            <p className="text-2xl font-bold text-green-600">{replied}</p>
-          </div>
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-5 h-5 text-slate-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-500 font-medium">Member Since</p>
+                    <p className="text-sm text-slate-800">{formatDate(authUser.createdAt)}</p>
+                  </div>
+                </div>
 
-          <div className="bg-white p-5 rounded-xl border">
-            <p className="text-sm text-slate-500">Pending</p>
-            <p className="text-2xl font-bold text-orange-500">
-              {totalEnquiries - replied}
-            </p>
-          </div>
-        </motion.section>
-
-        {/* ENQUIRIES */}
-        <motion.section
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl border shadow-sm p-6"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <MessageSquare className="w-7 h-7 text-blue-600" />
-            <h2 className="text-xl font-semibold">My Enquiries</h2>
-          </div>
-
-          {enquiries.length === 0 ? (
-            <p className="text-slate-500">You haven’t made any enquiries yet.</p>
-          ) : (
-            <div className="space-y-5">
-              {enquiries.map(enq => (
-                <motion.div
-                  key={enq._id}
-                  whileHover={{ y: -4 }}
-                  transition={{ type: "spring", stiffness: 220 }}
-                  className="border rounded-xl p-5 bg-slate-50 hover:bg-white hover:shadow-md transition"
-                >
-                  <div className="flex justify-between items-start">
-                    <p className="font-semibold text-slate-800">
-                      {enq.product?.name}
-                    </p>
-
-                    <span
-                      className={`text-xs px-3 py-1 rounded-full ${
-                        enq.adminResponse?.message
-                          ? "bg-green-100 text-green-700"
-                          : "bg-orange-100 text-orange-700"
-                      }`}
-                    >
-                      {enq.adminResponse?.message ? "Replied" : "Pending"}
+                <div className="flex items-start gap-3">
+                  <Shield className="w-5 h-5 text-slate-400 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-500 font-medium">Account Status</p>
+                    <span className="inline-flex items-center gap-1 text-sm text-green-700 bg-green-100 px-2 py-1 rounded-full mt-1">
+                      <CheckCircle size={14} />
+                      Verified
                     </span>
                   </div>
+                </div>
+              </div>
 
-                  <p className="text-sm text-slate-600 mt-2">
-                    {enq.message}
-                  </p>
+              {/* Action Buttons */}
+              <div className="p-6 pt-0 space-y-2">
+                <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors font-medium">
+                  <Edit size={18} />
+                  Edit Profile
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors font-medium"
+                >
+                  <LogOut size={18} />
+                  Logout
+                </button>
+              </div>
+            </motion.div>
 
-                  {enq.adminResponse?.message && (
-                    <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <p className="text-sm font-semibold text-green-700 mb-1">
-                        Admin Reply
-                      </p>
-                      <p className="text-sm text-green-800">
-                        {enq.adminResponse.message}
-                      </p>
-                    </div>
+            {/* Quick Links */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6"
+            >
+              <h3 className="font-bold text-slate-800 mb-4">Quick Links</h3>
+              <div className="space-y-2">
+                <Link
+                  to="/messages"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-primary-50 rounded-xl transition-colors group"
+                >
+                  <MessageSquare className="w-5 h-5 text-slate-600 group-hover:text-primary" />
+                  <span className="text-sm font-medium text-slate-700 group-hover:text-primary">Messages & Enquiries</span>
+                  {stats.pending > 0 && (
+                    <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                      {stats.pending}
+                    </span>
                   )}
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </motion.section>
+                </Link>
+                <Link
+                  to="/orders"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-primary-50 rounded-xl transition-colors group"
+                >
+                  <ShoppingBag className="w-5 h-5 text-slate-600 group-hover:text-primary" />
+                  <span className="text-sm font-medium text-slate-700 group-hover:text-primary">My Orders</span>
+                </Link>
+                {authUser.role === 'supplier' && (
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-primary-50 rounded-xl transition-colors group"
+                  >
+                    <Package className="w-5 h-5 text-slate-600 group-hover:text-primary" />
+                    <span className="text-sm font-medium text-slate-700 group-hover:text-primary">My Products</span>
+                  </Link>
+                )}
+              </div>
+            </motion.div>
+          </div>
 
+          {/* Right Column - Stats & Activity */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Statistics Cards */}
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-2 lg:grid-cols-3 gap-4"
+            >
+              <motion.div
+                variants={fadeUp}
+                className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <TrendingUp className="w-5 h-5 text-green-500" />
+                </div>
+                <p className="text-3xl font-black text-slate-800">{stats.totalEnquiries}</p>
+                <p className="text-sm text-slate-500 font-medium">Total Enquiries</p>
+              </motion.div>
+
+              <motion.div
+                variants={fadeUp}
+                className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                  </div>
+                </div>
+                <p className="text-3xl font-black text-green-600">{stats.replied}</p>
+                <p className="text-sm text-slate-500 font-medium">Replied</p>
+              </motion.div>
+
+              <motion.div
+                variants={fadeUp}
+                className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-orange-600" />
+                  </div>
+                </div>
+                <p className="text-3xl font-black text-orange-600">{stats.pending}</p>
+                <p className="text-sm text-slate-500 font-medium">Pending</p>
+              </motion.div>
+            </motion.div>
+
+            {/* Recent Enquiries Preview */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ delay: 0.2, duration: 0.4 }}
+              className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <MessageSquare className="w-7 h-7 text-primary" />
+                  <h2 className="text-xl font-bold text-slate-800">Recent Enquiries</h2>
+                </div>
+                <Link
+                  to="/messages"
+                  className="text-primary hover:text-primary-dark font-semibold text-sm flex items-center gap-1 group"
+                >
+                  View All
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
+              </div>
+
+              {enquiries.length === 0 ? (
+                <div className="text-center py-12">
+                  <MessageSquare className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-500 font-medium">No enquiries yet</p>
+                  <p className="text-sm text-slate-400 mt-1">
+                    Your enquiries will appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {enquiries.slice(0, 3).map((enq) => (
+                    <motion.div
+                      key={enq._id}
+                      whileHover={{ y: -2, scale: 1.01 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                      className="border border-slate-200 rounded-xl p-4 bg-slate-50 hover:bg-white hover:shadow-md transition-all cursor-pointer"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-800 line-clamp-1">
+                            {enq.product?.name || "Product Enquiry"}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {formatDate(enq.createdAt)}
+                          </p>
+                        </div>
+                        <span
+                          className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                            enq.adminResponse?.message
+                              ? "bg-green-100 text-green-700"
+                              : "bg-orange-100 text-orange-700"
+                          }`}
+                        >
+                          {enq.adminResponse?.message ? "✓ Replied" : "⏳ Pending"}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-slate-600 line-clamp-2">
+                        {enq.message}
+                      </p>
+
+                      {enq.adminResponse?.message && (
+                        <div className="mt-3 p-3 bg-green-50 border-l-4 border-green-500 rounded">
+                          <p className="text-xs font-semibold text-green-700 mb-1">
+                            Admin Reply:
+                          </p>
+                          <p className="text-sm text-green-800 line-clamp-2">
+                            {enq.adminResponse.message}
+                          </p>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+
+                  {enquiries.length > 3 && (
+                    <Link
+                      to="/messages"
+                      className="block text-center py-3 text-primary hover:text-primary-dark font-semibold text-sm border-2 border-dashed border-primary rounded-xl hover:bg-primary-50 transition-colors"
+                    >
+                      View {enquiries.length - 3} more enquiries
+                    </Link>
+                  )}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Activity Timeline */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6"
+            >
+              <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-primary" />
+                Recent Activity
+              </h3>
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-700">Account created</p>
+                    <p className="text-xs text-slate-500">{formatDate(authUser.createdAt)}</p>
+                  </div>
+                </div>
+                {enquiries.length > 0 && (
+                  <div className="flex gap-4">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-700">Latest enquiry sent</p>
+                      <p className="text-xs text-slate-500">{formatDate(enquiries[0]?.createdAt)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        </div>
       </div>
     </div>
   )
