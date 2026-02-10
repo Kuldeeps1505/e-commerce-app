@@ -11,7 +11,8 @@ import adminSupplierRoutes from "./routes/adminsupplier.js"
 import adminEnquiryRoutes from "./routes/adminenquiry.js"
 import profileRoutes from "./routes/profile.js";
 import uploadRoutes from "./routes/upload.js";
-
+import cartRoutes from "./routes/cart.js";
+import orderRoutes from "./routes/order.js";
 
 
 dotenv.config()
@@ -58,6 +59,8 @@ app.use("/api/admin/enquiries", adminEnquiryRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/uploads", express.static("uploads"));
+app.use("/api/cart", cartRoutes);
+app.use("/api/order", orderRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

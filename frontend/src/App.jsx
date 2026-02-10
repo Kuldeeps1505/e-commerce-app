@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { CartProvider } from './context/CartContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -14,6 +15,10 @@ import Profile from './pages/Profile'
   import { Toaster } from "react-hot-toast"
 import Messages  from './pages/Messages'
   import { useLocation } from 'react-router-dom'
+  import Cart from './pages/Cart'
+import Checkout from './pages/Checkout'
+import OrderSuccess from './pages/OrderSuccess'
+import TrackOrder from './pages/TrackOrder'
 function App() {
 
     const location = useLocation()
@@ -21,7 +26,7 @@ function App() {
   return (
     <AuthProvider>
       <div className="flex flex-col min-h-screen">
-        
+          <CartProvider>
         
         {!isAdminRoute && <Navbar />}
 
@@ -36,6 +41,10 @@ function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-success/:orderId" element={<OrderSuccess />} />
+          <Route path="/track-order/:orderId" element={<TrackOrder />} />
             <Route
               path="/profile"
               element={
@@ -56,6 +65,7 @@ function App() {
         </main>
 
         {!isAdminRoute && <Footer />}
+        </CartProvider>
       </div>
     </AuthProvider>
   );

@@ -363,7 +363,7 @@ export default function HomePage() {
       </section>
 
       {/* FEATURED PRODUCTS CAROUSEL */}
-      <section className="py-24 bg-white">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-end mb-12">
             <div>
@@ -382,8 +382,8 @@ export default function HomePage() {
           </div>
 
           {productsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, i) => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
                 <div key={i} className="bg-slate-100 rounded-2xl h-96 animate-pulse" />
               ))}
             </div>
@@ -394,8 +394,8 @@ export default function HomePage() {
           ) : (
             <div className="relative">
               {/* Show as grid if 4 or fewer products, otherwise carousel */}
-              {featuredProducts.length <= 4 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.length <= 5 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {featuredProducts.filter(product => product && product.name).map((product, index) => (
                     <motion.div
                       key={product.id || product._id}
@@ -592,7 +592,7 @@ export default function HomePage() {
       </section>
 
       {/* CATEGORY SHOWCASE */}
-      <section className="py-24 bg-gradient-to-br from-slate-100 to-slate-50">
+      <section className="py-20 bg-gradient-to-br from-slate-100 to-slate-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-black text-slate-900 mb-4">
@@ -604,9 +604,9 @@ export default function HomePage() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="bg-white rounded-2xl h-48 animate-pulse" />
+                <div key={i} className="bg-white rounded-2xl h-60 animate-pulse" />
               ))}
             </div>
           ) : (
@@ -615,7 +615,7 @@ export default function HomePage() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-6"
+              className="grid grid-cols-2 md:grid-cols-6 gap-6"
             >
               {categories.slice(0, 8).map((category) => (
                 <motion.div
@@ -646,7 +646,7 @@ export default function HomePage() {
       </section>
 
       {/* WHY CHOOSE US */}
-      <section className="py-24 bg-white">
+      <section className="py-18 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl lg:text-5xl font-black text-slate-900 mb-4">
@@ -698,7 +698,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA SECTION */}
-      <section className="py-24 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white relative overflow-hidden">
+      <section className="py-20 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white relative overflow-hidden">
         {/* Decorative Elements */}
         <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />

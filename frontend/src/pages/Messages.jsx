@@ -135,9 +135,9 @@ export default function Messages() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-gradient-to-r from-primary via-primary-dark to-blue-900 text-white"
       >
-        <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
+            <div className="w-14 h-12 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center">
               <MessageSquare className="w-8 h-8 text-white" />
             </div>
             <div>

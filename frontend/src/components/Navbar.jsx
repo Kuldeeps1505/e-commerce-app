@@ -14,7 +14,8 @@ import {
   ChevronDown,
   Package,
   MessageSquare,
-  LayoutGrid
+  LayoutGrid,
+  Clock
 } from 'lucide-react'
 import { useContext } from "react"
 import { AuthContext } from "../context/AuthContext"
@@ -30,10 +31,18 @@ export default function Navbar() {
   const [user, setUser] = useState(null)
   const [categories, setCategories] = useState([])
   const [notifications, setNotifications] = useState(0)
+  
+  // Search autocomplete states
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false)
+  const [searchSuggestions, setSearchSuggestions] = useState([])
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+  const [recentSearches, setRecentSearches] = useState([])
+  
   const navigate = useNavigate()
   
   const userMenuRef = useRef(null)
   const categoryMenuRef = useRef(null)
+  const searchDropdownRef = useRef(null)
 
   // Sync authentication state
   const syncAuth = () => {
@@ -77,25 +86,122 @@ export default function Navbar() {
       if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target)) {
         setIsCategoryMenuOpen(false)
       }
+      if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target)) {
+        setShowSearchDropdown(false)
+      }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Handle search
+  // Load recent searches from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('recentSearches')
+    if (saved) {
+      try {
+        setRecentSearches(JSON.parse(saved))
+      } catch (e) {
+        console.error('Failed to load recent searches', e)
+      }
+    }
+  }, [])
+
+  // Debounced search for autocomplete
+  const debounceTimer = useRef(null)
+  
+  const handleSearchInputChange = (e) => {
+    const value = e.target.value
+    setSearchQuery(value)
+    setShowSearchDropdown(true)
+
+    // Clear previous timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current)
+    }
+
+    // Fetch suggestions after 300ms delay
+    if (value.trim().length >= 2) {
+      setLoadingSuggestions(true)
+      debounceTimer.current = setTimeout(() => {
+        fetchSearchSuggestions(value)
+      }, 300)
+    } else {
+      setSearchSuggestions([])
+      setLoadingSuggestions(false)
+    }
+  }
+
+  // Fetch search suggestions from API
+  const fetchSearchSuggestions = async (query) => {
+    try {
+      const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : ''
+      const res = await api.get(`/products/search?q=${encodeURIComponent(query)}${categoryParam}&limit=5`)
+      
+      // Format suggestions
+      const suggestions = res.data.products?.map(product => ({
+        type: 'product',
+        name: product.name,
+        category: product.category,
+        price: product.price?.min || product.price,
+        image: product.image || product.images?.[0],
+        slug: product.slug || product._id
+      })) || []
+
+      setSearchSuggestions(suggestions)
+    } catch (err) {
+      console.error('Failed to fetch suggestions', err)
+      setSearchSuggestions([])
+    } finally {
+      setLoadingSuggestions(false)
+    }
+  }
+
+  // Select a suggestion
+  const selectSuggestion = (suggestion) => {
+    if (suggestion.type === 'product' && suggestion.slug) {
+      // Navigate to product page
+      navigate(`/product/${suggestion.slug}`)
+      addToRecentSearches(suggestion.name)
+      setSearchQuery('')
+      setShowSearchDropdown(false)
+    } else {
+      // Set as search query
+      setSearchQuery(suggestion.name)
+      setShowSearchDropdown(false)
+      handleSearchSubmit(suggestion.name)
+    }
+  }
+
+  // Add to recent searches
+  const addToRecentSearches = (query) => {
+    if (!query.trim()) return
+    
+    const updated = [query, ...recentSearches.filter(s => s !== query)].slice(0, 5)
+    setRecentSearches(updated)
+    localStorage.setItem('recentSearches', JSON.stringify(updated))
+  }
+
+  // Clear recent searches
+  const clearRecentSearches = () => {
+    setRecentSearches([])
+    localStorage.removeItem('recentSearches')
+  }
+
+  // Handle search submit
+  const handleSearchSubmit = (query = searchQuery) => {
+    if (!query.trim()) return
+    
+    addToRecentSearches(query)
+    const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : ''
+    navigate(`/products?search=${encodeURIComponent(query)}${categoryParam}`)
+    setShowSearchDropdown(false)
+  }
+
+  // Handle search form submit
   const handleSearch = async (e) => {
     e.preventDefault()
-    if (!searchQuery.trim()) return
-
-    try {
-      // Navigate to search results page with query params
-      const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : ''
-      navigate(`/products?search=${encodeURIComponent(searchQuery)}${categoryParam}`)
-      setSearchQuery('')
-    } catch (err) {
-      console.error("Search error:", err)
-    }
+    handleSearchSubmit()
   }
 
   // Handle logout
@@ -167,7 +273,7 @@ export default function Navbar() {
 
           {/* Category Dropdown + Search Bar (Desktop) */}
           <div className="hidden lg:flex items-center flex-1 max-w-2xl mx-8">
-            <form onSubmit={handleSearch} className="flex w-full shadow-md rounded-xl overflow-hidden border border-slate-200">
+            <form onSubmit={handleSearch} className="flex w-full shadow-md rounded-xl overflow-hidden border border-slate-200 relative">
               {/* Category Selector */}
               <div className="relative" ref={categoryMenuRef}>
                 <button
@@ -189,6 +295,7 @@ export default function Navbar() {
                 {isCategoryMenuOpen && (
                   <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 max-h-96 overflow-y-auto z-50">
                     <button
+                      type="button"
                       onClick={() => {
                         setSelectedCategory('all')
                         setIsCategoryMenuOpen(false)
@@ -198,30 +305,134 @@ export default function Navbar() {
                       All Categories
                     </button>
                     {categories.map((cat) => (
-                      <button
-                        key={cat._id}
-                        onClick={() => {
-                          setSelectedCategory(cat.slug)
-                          setIsCategoryMenuOpen(false)
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-primary-50 transition-colors flex items-center gap-3"
-                      >
-                        <span className="text-xl">{cat.icon || '📦'}</span>
-                        <span className="text-sm font-medium text-slate-700">{cat.name}</span>
-                      </button>
+                      <option key={cat._id} value={cat._id}>
+                            {cat.name}
+                          </option>
                     ))}
                   </div>
                 )}
               </div>
 
-              {/* Search Input */}
-              <input
-                type="text"
-                placeholder="Search for products, suppliers, categories..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-3 outline-none text-sm bg-white"
-              />
+              {/* Search Input with Autocomplete */}
+              <div className="flex-1 relative" ref={searchDropdownRef}>
+                <input
+                  type="text"
+                  placeholder="Search for products, suppliers, categories..."
+                  value={searchQuery}
+                  onChange={handleSearchInputChange}
+                  onFocus={() => setShowSearchDropdown(true)}
+                  className="w-full px-4 py-3 outline-none text-sm bg-white"
+                />
+
+                {/* Search Suggestions Dropdown */}
+                {showSearchDropdown && (searchQuery.trim() || recentSearches.length > 0) && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-slate-200 max-h-96 overflow-y-auto z-50">
+                    
+                    {/* Autocomplete Suggestions */}
+                    {searchSuggestions.length > 0 && (
+                      <div className="p-2">
+                        <p className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase">
+                          Suggestions
+                        </p>
+                        {searchSuggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => selectSuggestion(suggestion)}
+                            className="w-full text-left px-4 py-3 hover:bg-primary-50 rounded-lg transition-colors flex items-center gap-3 group"
+                          >
+                            {suggestion.type === 'product' ? (
+                              <>
+                                {suggestion.image && (
+                                  <img
+                                    src={suggestion.image}
+                                    alt={suggestion.name}
+                                    className="w-10 h-10 rounded-lg object-cover border border-slate-200"
+                                  />
+                                )}
+                                <div className="flex-1">
+                                  <p className="text-sm font-medium text-slate-800 group-hover:text-primary">
+                                    {suggestion.name}
+                                  </p>
+                                  {suggestion.category && (
+                                    <p className="text-xs text-slate-500">
+                                      in {suggestion.category}
+                                    </p>
+                                  )}
+                                </div>
+                                {suggestion.price && (
+                                  <p className="text-sm font-bold text-primary">
+                                    ${suggestion.price}
+                                  </p>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <Search size={16} className="text-slate-400 group-hover:text-primary" />
+                                <span className="text-sm text-slate-700 group-hover:text-primary flex-1">
+                                  {suggestion.name}
+                                </span>
+                              </>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Recent Searches */}
+                    {!searchQuery.trim() && recentSearches.length > 0 && (
+                      <div className="p-2 border-t border-slate-100">
+                        <div className="flex items-center justify-between px-3 py-2">
+                          <p className="text-xs font-semibold text-slate-500 uppercase">
+                            Recent Searches
+                          </p>
+                          <button
+                            type="button"
+                            onClick={clearRecentSearches}
+                            className="text-xs text-slate-400 hover:text-slate-600"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                        {recentSearches.map((search, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => {
+                              setSearchQuery(search)
+                              setShowSearchDropdown(false)
+                              handleSearchSubmit(search)
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-slate-50 rounded-lg transition-colors flex items-center gap-3 group"
+                          >
+                            <Clock size={16} className="text-slate-400 group-hover:text-primary" />
+                            <span className="text-sm text-slate-700 group-hover:text-primary flex-1">
+                              {search}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* No Results */}
+                    {searchQuery.trim() && searchSuggestions.length === 0 && loadingSuggestions === false && (
+                      <div className="p-8 text-center">
+                        <Search className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                        <p className="text-sm text-slate-600 font-medium">No suggestions found</p>
+                        <p className="text-xs text-slate-500 mt-1">Try a different search term</p>
+                      </div>
+                    )}
+
+                    {/* Loading */}
+                    {loadingSuggestions && (
+                      <div className="p-8 text-center">
+                        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                        <p className="text-xs text-slate-500 mt-3">Searching...</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
               {/* Search Button */}
               <button 
@@ -249,7 +460,7 @@ export default function Navbar() {
                   <span className="text-xs text-slate-600 mt-1">Products</span>
                 </Link>
 
-               
+                
 
                 <Link
                   to="/messages"
@@ -278,7 +489,7 @@ export default function Navbar() {
                       <p className="text-sm font-semibold text-slate-800 leading-tight">
                         {user?.name?.split(' ')[0] || 'User'}
                       </p>
-                      <p className="text-xs text-slate-500">{getUserRole()}</p>
+                      <p className="text-xs text-slate-500">User</p>
                     </div>
                     <ChevronDown size={16} className={`text-slate-500 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
@@ -420,7 +631,7 @@ export default function Navbar() {
                 </Link>
 
                 <Link
-                  to="/category/all"
+                  to="/products"
                   onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors"
                 >

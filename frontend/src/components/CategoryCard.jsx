@@ -16,9 +16,9 @@ export default function CategoryCard({ category }) {
         <img
         src={category.image}
         alt={category.name}
-        className="w-full h-40 object-cover"
+        className="w-full h-60 object-cover"
       />
-          <h3 className="font-semibold text-lg text-slate-800 group-hover:text-primary transition-colors">
+          <h3 className="font-semibold text-lg text-slate-600 group-hover:text-primary transition-colors">
             {category.name}
           </h3>
         

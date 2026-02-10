@@ -5,7 +5,7 @@ export default function ProductCard({ product }) {
   const slug = product.slug || product.name.toLowerCase().replace(/\s+/g, '-')
   const image = product.images?.[0] || product.image || 'https://via.placeholder.com/400'
   const price = product.price 
-    ? `₹${product.price.min} - ₹${product.price.max}` 
+    ? `₹${product.price.min} ` 
     : product.priceRange || 'Contact for price'
   const moq = product.moq 
     ? `${product.moq.quantity} ${product.moq.unit}` 
