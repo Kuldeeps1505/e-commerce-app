@@ -6,6 +6,9 @@ import api from '../api'
 import { useCart } from '../context/CartContext'
 import toast from 'react-hot-toast'
 
+
+
+
 export default function ProductDetailPage() {
   const { productSlug } = useParams()
   const navigate = useNavigate()
@@ -161,7 +164,7 @@ export default function ProductDetailPage() {
           <Package className="mx-auto h-24 w-24 text-gray-300 mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Product Not Found</h2>
           <p className="text-gray-600 mb-4">The product you're looking for doesn't exist.</p>
-          <Link to="/products" className="text-blue-600 hover:underline">
+          <Link to="/category/all" className="text-blue-600 hover:underline">
             Browse Products
           </Link>
         </div>
@@ -181,6 +184,11 @@ export default function ProductDetailPage() {
     ? `${product.moq.quantity} ${product.moq.unit}`
     : 'N/A'
 
+  const { id } = useParams();
+
+
+
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
@@ -189,7 +197,7 @@ export default function ProductDetailPage() {
           <div className="text-sm text-gray-600">
             <Link to="/" className="hover:text-blue-600 transition">Home</Link>
             <span className="mx-2">/</span>
-            <Link to="/products" className="hover:text-blue-600 transition">Products</Link>
+            <Link to="/category/all" className="hover:text-blue-600 transition">Products</Link>
             <span className="mx-2">/</span>
             <span className="text-gray-800 font-medium">{product.name}</span>
           </div>
@@ -421,7 +429,7 @@ function EnquiryModal({ onClose, product }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!product || !product._id) {
+    if (!product) {
       toast.error('Product not loaded. Please wait.')
       return
     }
@@ -475,7 +483,7 @@ function EnquiryModal({ onClose, product }) {
             <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
             <input
               type="email"
-              placeholder="john@example.com"
+              placeholder="abc@example.com"
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={formData.email}

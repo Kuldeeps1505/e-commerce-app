@@ -160,34 +160,34 @@ export default function Checkout() {
     }
   }
 
-  const handleCODOrder = async () => {
-    if (!validateForm()) return
+    const handleCODOrder = async () => {
+      if (!validateForm()) return
 
-    try {
-      setLoading(true)
+      try {
+        setLoading(true)
 
-      const orderData = {
-        shippingAddress,
-        paymentMethod: 'cod',
-        items: cartItems.map(item => ({
-          product: item.product._id,
-          quantity: item.quantity,
-          price: item.price
-        }))
+        const orderData = {
+          shippingAddress,
+          paymentMethod: 'cod',
+          items: cartItems.map(item => ({
+            product: item.product._id,
+            quantity: item.quantity,
+            price: item.price
+          }))
+        }
+
+        const res = await api.post('/order/create-cod', orderData)
+        
+        toast.success('Order placed successfully!')
+        clearCart()
+        navigate(`/order-success/${res.data.order._id}`)
+      } catch (error) {
+        console.error('COD order error:', error)
+        toast.error(error.response?.data?.error || 'Failed to place order')
+      } finally {
+        setLoading(false)
       }
-
-      const res = await api.post('/order/create-cod', orderData)
-      
-      toast.success('Order placed successfully!')
-      clearCart()
-      navigate(`/order-success/${orderId}`)
-    } catch (error) {
-      console.error('COD order error:', error)
-      toast.error(error.response?.data?.error || 'Failed to place order')
-    } finally {
-      setLoading(false)
     }
-  }
 
   const handleSubmit = (e) => {
     e.preventDefault()

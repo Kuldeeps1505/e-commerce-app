@@ -1,9 +1,10 @@
+
+
 import express from 'express'
 import Product from '../models/Product.js'
+import Category from "../models/Category.js";
 
 const router = express.Router()
-
-import Category from "../models/Category.js";
 
 router.get("/", async (req, res) => {
   try {
@@ -40,6 +41,80 @@ router.get("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Product fetch error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add this route BEFORE router.get('/:slug')
+router.get('/suggestions', async (req, res) => {
+  try {
+    const { q, category } = req.query;
+    
+    if (!q || q.length < 2) {
+      return res.json({ suggestions: [] });
+    }
+
+    const query = {
+      isActive: true,
+      name: { $regex: q, $options: 'i' }
+    };
+
+    // Add category filter if provided
+    if (category && category !== 'all') {
+      const cat = await Category.findById(category);
+      if (cat) query.category = cat._id;
+    }
+
+    const products = await Product.find(query)
+      .populate('category', 'name')
+      .limit(5)
+      .select('name slug images price category')
+      .sort('-views');
+
+    res.json({ suggestions: products });
+  } catch (error) {
+    console.error('Suggestions error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add search route
+router.get('/search', async (req, res) => {
+  try {
+    const { q, category, sort, page = 1, limit = 12 } = req.query;
+
+    const query = { isActive: true };
+
+    // Search
+    if (q) {
+      query.$or = [
+        { name: { $regex: q, $options: 'i' } },
+        { description: { $regex: q, $options: 'i' } }
+      ];
+    }
+
+    // Category filter
+    if (category && category !== 'all') {
+      const cat = await Category.findById(category);
+      if (cat) query.category = cat._id;
+    }
+
+    const products = await Product.find(query)
+      .populate('category', 'name slug')
+      .limit(Number(limit))
+      .skip((page - 1) * limit)
+      .sort(sort || '-createdAt');
+
+    const count = await Product.countDocuments(query);
+
+    res.json({
+      products,
+      totalPages: Math.ceil(count / limit),
+      currentPage: Number(page),
+      total: count
+    });
+  } catch (error) {
+    console.error('Search error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -105,28 +180,22 @@ router.delete('/:id', async (req, res) => {
 })
 
 
-// GET /api/products/search-one?name=pineapple&category=Electronics
-router.get("/search-one", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
-    const { name, category } = req.query
-
-    const query = {
-      name: { $regex: `^${name}$`, $options: "i" },
-    }
-
-    if (category) query.category = category
-
-    const product = await Product.findOne(query)
+    const product = await Product.findById(req.params.id);
 
     if (!product) {
-      return res.status(404).json({ message: "Product not found" })
+      return res.status(404).json({ message: "Product not found" });
     }
 
-    res.json(product)
+    res.json(product);
   } catch (err) {
-    res.status(500).json({ message: "Server error" })
+    res.status(500).json({ message: "Server error" });
   }
-})
+});
+
+
+
 
 
 export default router

@@ -45,8 +45,15 @@ export default function Profile() {
     totalOrders: 0
   })
 
+ 
+
+
   const navigate = useNavigate()
   const { user: authUser, setUser, logout } = useContext(AuthContext)
+ const [showEditModal, setShowEditModal] = useState(false);
+const [newName, setNewName] = useState(authUser?.name || "");
+const [updating, setUpdating] = useState(false);
+
 
   // Fetch Profile
   useEffect(() => {
@@ -63,6 +70,16 @@ export default function Profile() {
 
     fetchProfile()
   }, [setUser])
+
+
+useEffect(() => {
+  if (authUser?.name) setNewName(authUser.name);
+}, [authUser]);
+
+
+
+
+
 
   // Fetch Enquiries
   useEffect(() => {
@@ -96,6 +113,27 @@ export default function Profile() {
     window.dispatchEvent(new Event("auth-change"))
     navigate("/login")
   }
+
+
+  const handleUpdateName = async () => {
+  try {
+    setUpdating(true);
+
+    const res = await api.put("/auth/update-name", {
+      name: newName,
+    });
+
+    // update global auth user
+    setUser(res.data.user);
+
+    setShowEditModal(false);
+  } catch (err) {
+    console.error("Update failed", err);
+  } finally {
+    setUpdating(false);
+  }
+};
+
 
   // Format date
   const formatDate = (dateString) => {
@@ -145,7 +183,7 @@ export default function Profile() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
         
-        <div className="relative max-w-7xl mx-auto px-6 py-12">
+        <div className="relative max-w-7xl mx-auto px-6 py-8">
           <h1 className="text-4xl font-black mb-2">My Account</h1>
           <p className="text-blue-100 text-lg">
             Manage your profile, enquiries, and business activities
@@ -242,10 +280,8 @@ export default function Profile() {
 
               {/* Action Buttons */}
               <div className="p-6 pt-0 space-y-2">
-                <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors font-medium">
-                  <Edit size={18} />
-                  Edit Profile
-                </button>
+              
+            
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors font-medium"
@@ -279,7 +315,7 @@ export default function Profile() {
                   )}
                 </Link>
                 <Link
-                  to="/orders"
+                  to="/track-order/:orderId"
                   className="flex items-center gap-3 px-4 py-3 hover:bg-primary-50 rounded-xl transition-colors group"
                 >
                   <ShoppingBag className="w-5 h-5 text-slate-600 group-hover:text-primary" />
@@ -471,6 +507,39 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {showEditModal && (
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+    <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl">
+      <h2 className="text-xl font-bold mb-4">Edit Name</h2>
+
+      <input
+        type="text"
+        value={newName}
+        onChange={(e) => setNewName(e.target.value)}
+        className="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-primary"
+      />
+
+      <div className="flex justify-end gap-2">
+        <button
+          onClick={() => setShowEditModal(false)}
+          className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleUpdateName}
+          disabled={updating}
+          className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-dark disabled:opacity-50"
+        >
+          {updating ? "Saving..." : "Save"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   )
 }

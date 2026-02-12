@@ -17,7 +17,7 @@ export default function ProductCard({ product }) {
   
   return (
     <div className="bg-surface-elevated rounded-2xl shadow-soft border border-surface-border overflow-hidden hover:shadow-soft-lg hover:border-primary-200 transition-all duration-200">
-      <Link to={`/product/${slug}`} className="block overflow-hidden">
+      <Link to={`/products/${slug}`} className="block overflow-hidden">
         <img
           src={image}
           alt={product.name}
@@ -25,7 +25,7 @@ export default function ProductCard({ product }) {
         />
       </Link>
       <div className="p-4 sm:p-5">
-        <Link to={`/product/${slug}`}>
+        <Link to={`/products/${slug}`}>
           <h3 className="font-semibold text-slate-800 mb-2 hover:text-primary line-clamp-2 min-h-[2.5rem] transition-colors">
             {product.name}
           </h3>
@@ -52,7 +52,7 @@ export default function ProductCard({ product }) {
         </div>
 
         <Link
-          to={`/product/${slug}`}
+          to={`/products/${slug}`}
           className="w-full btn-primary py-2.5 px-4 text-sm flex items-center justify-center gap-2 rounded-xl"
         >
           <MessageSquare size={16} />

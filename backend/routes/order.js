@@ -228,6 +228,37 @@ router.get('/my-orders', protect, async (req, res) => {
   }
 })
 
+
+
+// Move this BEFORE the '/:id' route
+// @desc    Track order by order number
+// @route   GET /api/orders/track/:orderNumber
+// @access  Public (with order number)
+router.get('/track/:orderNumber', async (req, res) => {
+  try {
+    const order = await Order.findOne({ orderNumber: req.params.orderNumber })
+      .select('orderNumber status statusHistory tracking createdAt shippedAt deliveredAt items subtotal tax shippingCost total shippingAddress payment')
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: 'Order not found. Please check your order number.'
+      })
+    }
+    
+    res.json({
+      success: true,
+      order
+    })
+  } catch (error) {
+    console.error('Track order error:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to track order'
+    })
+  }
+})
+
 // @desc    Get order by ID
 // @route   GET /api/orders/:id
 // @access  Private
@@ -264,33 +295,6 @@ router.get('/:id', protect, async (req, res) => {
   }
 })
 
-// @desc    Track order by order number
-// @route   GET /api/orders/track/:orderNumber
-// @access  Public (with order number)
-router.get('/track/:orderNumber', async (req, res) => {
-  try {
-    const order = await Order.findOne({ orderNumber: req.params.orderNumber })
-      .select('orderNumber status statusHistory tracking createdAt shippedAt deliveredAt')
-    
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        error: 'Order not found. Please check your order number.'
-      })
-    }
-    
-    res.json({
-      success: true,
-      order
-    })
-  } catch (error) {
-    console.error('Track order error:', error)
-    res.status(500).json({
-      success: false,
-      error: 'Failed to track order'
-    })
-  }
-})
 
 // @desc    Cancel order
 // @route   PUT /api/orders/:id/cancel

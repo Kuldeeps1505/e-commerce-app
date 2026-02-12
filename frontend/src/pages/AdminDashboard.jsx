@@ -72,6 +72,9 @@ export default function AdminDashboard() {
   const [sendingReplyId, setSendingReplyId] = useState(null)
   const [loadingCategories, setLoadingCategories] = useState(false)
 
+const [orders, setOrders] = useState([])
+const [loadingOrders, setLoadingOrders] = useState(false)
+
   const [productForm, setProductForm] = useState({
     name: "",
     description: "",
@@ -103,6 +106,9 @@ export default function AdminDashboard() {
     if (activeTab === 'categories') {
       fetchCategories()
     }
+      if (activeTab === 'orders') {  
+    fetchOrders()
+  }
     if (activeTab === 'enquiries') {
       fetchEnquiries()
     }
@@ -119,6 +125,29 @@ export default function AdminDashboard() {
       console.error('Failed to fetch dashboard data:', error)
     }
   }
+
+const fetchOrders = async () => {
+  try {
+    setLoadingOrders(true)
+    const res = await api.get('/order/admin/all')
+    setOrders(res.data.orders || [])
+  } catch (error) {
+    console.error('Failed to fetch orders:', error)
+    toast.error('Failed to fetch orders')
+    setOrders([])
+  } finally {
+    setLoadingOrders(false)
+  }
+}
+
+
+
+
+
+
+
+
+
 
   const fetchEnquiries = async () => {
     try {
@@ -215,6 +244,21 @@ export default function AdminDashboard() {
     }]
   }
 
+
+  const updateOrderStatus = async (orderId, newStatus) => {
+  try {
+    const res = await api.put(`/order/admin/${orderId}/status`, {
+      status: newStatus,
+      note: `Status updated to ${newStatus}`
+    })
+    
+    toast.success('Order status updated successfully!')
+    fetchOrders() // Refresh orders list
+  } catch (error) {
+    console.error('Failed to update order status:', error)
+    toast.error(error.response?.data?.error || 'Failed to update order status')
+  }
+} 
   const enquiryStatusData = {
     labels: ['New', 'In Progress', 'Resolved'],
     datasets: [{
@@ -486,6 +530,7 @@ export default function AdminDashboard() {
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'categories', label: 'Categories', icon: PieChart },
+    { id: 'orders', label: 'Orders', icon: ShoppingCart },
     { id: 'enquiries', label: 'Enquiries', icon: MessageSquare }
   ]
 
@@ -508,12 +553,13 @@ export default function AdminDashboard() {
       color: 'green'
     },
     { 
-      icon: Eye, 
-      label: 'Total Views', 
-      value: stats.totalViews.toLocaleString(), 
-      change: `+${stats.viewsChange}%`,
+      icon: ShoppingCart,   
+      label: 'Total Orders',
+      value: orders.length.toLocaleString(),
+      change: `+${stats.ordersChange}%`,  
       positive: true,
       color: 'purple'
+
     },
     { 
       icon: PieChart, 
@@ -613,52 +659,7 @@ export default function AdminDashboard() {
                 ))}
               </div>
 
-              {/* Charts Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Line Chart */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800">Activity Overview</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <MoreVertical size={20} />
-                    </button>
-                  </div>
-                  <div className="h-80">
-                    <Line data={revenueChartData} options={chartOptions} />
-                  </div>
-                </div>
-
-                {/* Doughnut Chart */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-800">Enquiry Status</h3>
-                    <button className="text-gray-400 hover:text-gray-600">
-                      <MoreVertical size={20} />
-                    </button>
-                  </div>
-                  <div className="h-80">
-                    <Doughnut data={enquiryStatusData} options={doughnutOptions} />
-                  </div>
-                </div>
-              </div>
-
-              {/* Category Distribution */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-6">Top Categories</h3>
-                <div className="h-80">
-                  <Bar 
-                    data={categoryChartData} 
-                    options={{
-                      ...chartOptions,
-                      plugins: {
-                        legend: {
-                          display: false
-                        }
-                      }
-                    }} 
-                  />
-                </div>
-              </div>
+              
 
               {/* Recent Enquiries */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -711,6 +712,7 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
+                  
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                     <input 
@@ -1119,6 +1121,236 @@ export default function AdminDashboard() {
             </div>
           )}
 
+
+
+{/* Orders Tab */}
+{activeTab === 'orders' && (
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <div>
+        <h3 className="text-xl font-bold text-gray-800">All Orders</h3>
+        <p className="text-sm text-gray-600 mt-1">Total: {orders.length} orders</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <select
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          onChange={(e) => {
+            if (e.target.value === 'all') {
+              fetchOrders()
+            } else {
+              setOrders(orders.filter(o => o.status === e.target.value))
+            }
+          }}
+        >
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="processing">Processing</option>
+          <option value="shipped">Shipped</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <button 
+          onClick={fetchOrders}
+          className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+        >
+          <RefreshCw size={18} />
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    {loadingOrders ? (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    ) : orders.length === 0 ? (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+        <ShoppingCart size={48} className="mx-auto mb-3 text-gray-300" />
+        <p className="text-gray-500">No orders yet.</p>
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {orders.map((order) => (
+          <div 
+            key={order._id} 
+            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition"
+          >
+            {/* Card Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono text-sm font-bold text-white">
+                  {order.orderNumber}
+                </span>
+                <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                  order.payment?.method === 'cod' 
+                    ? 'bg-orange-100 text-orange-700' 
+                    : 'bg-white/20 text-white border border-white/30'
+                }`}>
+                  {order.payment?.method?.toUpperCase() || 'N/A'}
+                </span>
+              </div>
+              <p className="text-white/90 text-sm">
+                {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
+
+            {/* Card Body */}
+            <div className="p-5">
+              {/* Customer Info */}
+              <div className="mb-4 pb-4 border-b border-gray-200">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Users className="text-blue-600" size={20} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-800">
+                      {order.user?.name || 'Guest User'}
+                    </p>
+                    <p className="text-xs text-gray-500">{order.user?.email}</p>
+                  </div>
+                </div>
+                {order.shippingAddress && (
+                  <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                    <p className="font-medium">{order.shippingAddress.fullName}</p>
+                    <p>{order.shippingAddress.addressLine1}</p>
+                    <p>
+                      {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}
+                    </p>
+                    <p className="mt-1">📱 {order.shippingAddress.phone}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Order Items */}
+              <div className="mb-4">
+                <p className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                  Items ({order.items?.length || 0})
+                </p>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {order.items?.map((item, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg"
+                    >
+                      {item.productSnapshot?.image && (
+                        <img 
+                          src={item.productSnapshot.image} 
+                          alt={item.productSnapshot?.name}
+                          className="w-12 h-12 object-cover rounded border border-gray-200"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">
+                          {item.productSnapshot?.name || 'Product'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Qty: {item.quantity} × ₹{item.price?.toLocaleString()}
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold text-gray-800">
+                        ₹{item.subtotal?.toLocaleString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pricing Summary */}
+              <div className="mb-4 pb-4 border-b border-gray-200 space-y-1 text-sm">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal:</span>
+                  <span>₹{order.subtotal?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Tax (18%):</span>
+                  <span>₹{order.tax?.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Shipping:</span>
+                  <span>
+                    {order.shippingCost === 0 
+                      ? <span className="text-green-600 font-medium">FREE</span> 
+                      : `₹${order.shippingCost}`}
+                  </span>
+                </div>
+                <div className="flex justify-between text-lg font-bold text-gray-800 pt-2 border-t border-gray-200">
+                  <span>Total:</span>
+                  <span className="text-blue-600">₹{order.total?.toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* Status Update */}
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                  Order Status
+                </label>
+                <select
+                  value={order.status}
+                  onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                  className={`w-full px-4 py-2.5 text-sm font-medium rounded-lg border-2 cursor-pointer transition focus:ring-2 focus:ring-blue-500 ${
+                    order.status === 'delivered' ? 'bg-green-50 border-green-200 text-green-700' :
+                    order.status === 'shipped' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                    order.status === 'processing' ? 'bg-yellow-50 border-yellow-200 text-yellow-700' :
+                    order.status === 'confirmed' ? 'bg-purple-50 border-purple-200 text-purple-700' :
+                    order.status === 'cancelled' ? 'bg-red-50 border-red-200 text-red-700' :
+                    'bg-gray-50 border-gray-200 text-gray-700'
+                  }`}
+                >
+                  <option value="pending">⏳ Pending</option>
+                  <option value="confirmed">✅ Confirmed</option>
+                  <option value="processing">⚙️ Processing</option>
+                  <option value="shipped">🚚 Shipped</option>
+                  <option value="delivered">📦 Delivered</option>
+                  <option value="cancelled">❌ Cancelled</option>
+                </select>
+              </div>
+
+              {/* Payment Status */}
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    order.payment?.status === 'completed' ? 'bg-green-500' :
+                    order.payment?.status === 'pending' ? 'bg-yellow-500' :
+                    'bg-red-500'
+                  }`}></div>
+                  <span className="text-xs font-medium text-gray-700">
+                    Payment: {order.payment?.status || 'Unknown'}
+                  </span>
+                </div>
+                {order.payment?.paidAt && (
+                  <span className="text-xs text-gray-500">
+                    {new Date(order.payment.paidAt).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Card Footer */}
+            <div className="px-5 py-3 bg-gray-50 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                
+                {order.tracking?.trackingNumber && (
+                  <div className="text-xs text-gray-600">
+                    <span className="font-medium">Tracking:</span> {order.tracking.trackingNumber}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
+
           {/* Enquiries Tab */}
           {activeTab === 'enquiries' && (
             <div className="space-y-6">
@@ -1403,5 +1635,7 @@ export default function AdminDashboard() {
         </div>
       )}
     </div>
+
+    
   )
 }

@@ -34,27 +34,34 @@ router.get('/',protect, async (req, res) => {
   }
 })
 
-router.post('/',protect, async (req, res) => {
+
+router.post('/', protect, async (req, res) => {
   try {
-    const { product, name, email, phone, message } = req.body
+    const { product, name, email, phone, message, enquiryType, pincode } = req.body
     
+    // Validation
     if (!product || !name || !email || !phone || !message) {
-      return res.status(400).json({ error: 'product, name, email, phone, and message are required' })
+      return res.status(400).json({ error: 'Product, name, email, phone, and message are required' })
     }
 
+    // Create enquiry
     const enquiry = new Enquiry({
-         ...req.body,
-        user: req.user._id,
-        product: productId,
-        message
-    });
+      user: req.user._id,
+      product: product,  // ✅ Changed from productId to product
+      name,
+      email,
+      phone,
+      message,
+      enquiryType: enquiryType || 'product',
+      pincode: pincode || ''
+    })
     
     const savedEnquiry = await enquiry.save()
     
-    // Populate product and supplier for response
+    // Populate product for response
     await savedEnquiry.populate('product')
     
-    // Increment enquiry count on product
+    // Increment enquiry count on product (optional)
     await Product.findByIdAndUpdate(product, { $inc: { enquiries: 1 } })
     
     console.log('✅ Enquiry created:', savedEnquiry._id)
@@ -68,6 +75,8 @@ router.post('/',protect, async (req, res) => {
     res.status(400).json({ error: error.message })
   }
 })
+
+
 
 router.patch('/:id/status', async (req, res) => {
   try {

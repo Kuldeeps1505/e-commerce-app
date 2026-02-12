@@ -20,11 +20,11 @@ export default function ProductListingPage() {
   const [sortBy, setSortBy] = useState("relevance")
 
   const [searchParams] = useSearchParams()
-  const searchQuery = searchParams.get("q") || "";
   const search = searchParams.get("search") || "";
-  const category = searchParams.get("category") || "All Categories";
+  const searchQuery = searchParams.get('search')
+  const categoryParam = searchParams.get('category')
 
- 
+ const [category, setCategory] = useState(" ")
 
   const [categories, setCategories] = useState([])
    

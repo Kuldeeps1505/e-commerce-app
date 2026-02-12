@@ -17,8 +17,6 @@ import {
   LayoutGrid,
   Clock
 } from 'lucide-react'
-import { useContext } from "react"
-import { AuthContext } from "../context/AuthContext"
 import api from '../api'
 
 export default function Navbar() {
@@ -30,6 +28,7 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState(null)
   const [categories, setCategories] = useState([])
+  const [products, setProducts] = useState([])
   const [notifications, setNotifications] = useState(0)
   
   // Search autocomplete states
@@ -37,6 +36,7 @@ export default function Navbar() {
   const [searchSuggestions, setSearchSuggestions] = useState([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const [recentSearches, setRecentSearches] = useState([])
+  const [loadingCategories, setLoadingCategories] = useState(false)
   
   const navigate = useNavigate()
   
@@ -77,6 +77,7 @@ export default function Navbar() {
     fetchCategories()
   }, [])
 
+  
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -136,16 +137,16 @@ export default function Navbar() {
   const fetchSearchSuggestions = async (query) => {
     try {
       const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : ''
-      const res = await api.get(`/products/search?q=${encodeURIComponent(query)}${categoryParam}&limit=5`)
+      const res = await api.get(`/products/suggestions?q=${encodeURIComponent(query)}${categoryParam}&limit=5`)
       
       // Format suggestions
-      const suggestions = res.data.products?.map(product => ({
+      const suggestions = res.data.suggestions?.map(product => ({
         type: 'product',
         name: product.name,
-        category: product.category,
+        category: product.category?.name,
         price: product.price?.min || product.price,
-        image: product.image || product.images?.[0],
-        slug: product.slug || product._id
+        image: product.images?.[0],
+        slug: product.slug
       })) || []
 
       setSearchSuggestions(suggestions)
@@ -160,13 +161,11 @@ export default function Navbar() {
   // Select a suggestion
   const selectSuggestion = (suggestion) => {
     if (suggestion.type === 'product' && suggestion.slug) {
-      // Navigate to product page
-      navigate(`/product/${suggestion.slug}`)
+      navigate(`/products/${suggestion.slug}`)
       addToRecentSearches(suggestion.name)
       setSearchQuery('')
       setShowSearchDropdown(false)
     } else {
-      // Set as search query
       setSearchQuery(suggestion.name)
       setShowSearchDropdown(false)
       handleSearchSubmit(suggestion.name)
@@ -189,12 +188,17 @@ export default function Navbar() {
   }
 
   // Handle search submit
+
+
   const handleSearchSubmit = (query = searchQuery) => {
-    if (!query.trim()) return
+    const clean = query.trim().toLowerCase();
+  if (!clean) return;
     
+
     addToRecentSearches(query)
+  
     const categoryParam = selectedCategory !== 'all' ? `&category=${selectedCategory}` : ''
-    navigate(`/products?search=${encodeURIComponent(query)}${categoryParam}`)
+    navigate(`/products/${encodeURIComponent(query)}${categoryParam}`)
     setShowSearchDropdown(false)
   }
 
@@ -212,12 +216,6 @@ export default function Navbar() {
     setUser(null)
     window.dispatchEvent(new Event("auth-change"))
     navigate("/")
-  }
-
-  // Get user role display
-  const getUserRole = () => {
-    if (!user) return ''
-    return user.role === 'supplier' ? 'Supplier' : user.role === 'buyer' ? 'Buyer' : 'Admin'
   }
 
   return (
@@ -273,51 +271,65 @@ export default function Navbar() {
 
           {/* Category Dropdown + Search Bar (Desktop) */}
           <div className="hidden lg:flex items-center flex-1 max-w-2xl mx-8">
-            <form onSubmit={handleSearch} className="flex w-full shadow-md rounded-xl overflow-hidden border border-slate-200 relative">
-              {/* Category Selector */}
-              <div className="relative" ref={categoryMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsCategoryMenuOpen(!isCategoryMenuOpen)}
-                  className="flex items-center gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 border-r border-slate-200 transition-colors whitespace-nowrap"
-                >
-                  <LayoutGrid size={18} className="text-slate-600" />
-                  <span className="text-sm font-medium text-slate-700">
-                    {selectedCategory === 'all' 
-                      ? 'All Categories' 
-                      : categories.find(c => c.slug === selectedCategory)?.name || 'All Categories'
-                    }
-                  </span>
-                  <ChevronDown size={16} className={`text-slate-500 transition-transform ${isCategoryMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
+          <form onSubmit={handleSearch} className="flex w-full shadow-md rounded-xl overflow-hidden border border-slate-200 relative">
+  {/* Category Selector */}
+  <div className="relative" ref={categoryMenuRef}>
+    <button
+      type="button"
+      onClick={() => setIsCategoryMenuOpen(!isCategoryMenuOpen)}
+      className="flex items-center gap-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 border-r border-slate-200 transition-colors whitespace-nowrap"
+    >
+      <LayoutGrid size={18} className="text-slate-600" />
 
-                {/* Category Dropdown */}
-                {isCategoryMenuOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-2xl border border-slate-200 max-h-96 overflow-y-auto z-50">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCategory('all')
-                        setIsCategoryMenuOpen(false)
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-primary-50 transition-colors border-b border-slate-100 font-medium text-slate-700"
-                    >
-                      All Categories
-                    </button>
-                    {categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                            {cat.name}
-                          </option>
-                    ))}
-                  </div>
-                )}
-              </div>
+      <span className="text-sm font-medium text-slate-700">
+        {selectedCategory === "all"
+          ? "All Categories"
+          : categories.find((c) => c._id === selectedCategory)?.name ||  // ✅ Changed cat to c
+            "Select Category"}
+      </span>
+
+    </button>
+
+    {/* DROPDOWN MENU */}
+    {isCategoryMenuOpen && (
+      <div className="absolute left-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+        
+        {/* Default Option */}
+        <button
+          type="button"  // ✅ Added type="button" to prevent form submission
+          onClick={() => {
+            setSelectedCategory("");
+            setIsCategoryMenuOpen(false);
+          }}
+          className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100"
+        >
+          {loadingCategories ? "Loading categories..." : "All Categories"}
+        </button>
+
+        {/* Category List */}
+        {categories.map((cat) => (
+          
+          <button
+            key={cat._id}
+            type="button"  
+            onClick={() => {
+              setSelectedCategory(cat._id);
+              setIsCategoryMenuOpen(false);
+            }}
+            className="w-full text-left px-4 py-2 text-sm hover:bg-slate-100"
+          >
+            {cat.name}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
 
               {/* Search Input with Autocomplete */}
               <div className="flex-1 relative" ref={searchDropdownRef}>
                 <input
                   type="text"
-                  placeholder="Search for products, suppliers, categories..."
+                  placeholder="Search for products ( use lowercase letters only..)"
                   value={searchQuery}
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchDropdown(true)}
@@ -362,7 +374,7 @@ export default function Navbar() {
                                 </div>
                                 {suggestion.price && (
                                   <p className="text-sm font-bold text-primary">
-                                    ${suggestion.price}
+                                    ₹{suggestion.price}
                                   </p>
                                 )}
                               </>
@@ -460,8 +472,6 @@ export default function Navbar() {
                   <span className="text-xs text-slate-600 mt-1">Products</span>
                 </Link>
 
-                
-
                 <Link
                   to="/messages"
                   className="flex flex-col items-center p-2 rounded-xl hover:bg-slate-50 transition-colors group relative"
@@ -511,19 +521,17 @@ export default function Navbar() {
                         <span className="text-sm font-medium">My Profile</span>
                       </Link>
 
-                      {user?.role === 'supplier' && (
-                        <Link
-                          to="/dashboard"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-primary-50 transition-colors text-slate-700"
-                        >
-                          <Package size={18} />
-                          <span className="text-sm font-medium">My Products</span>
-                        </Link>
-                      )}
+                      <Link
+                        to="/cart"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-primary-50 transition-colors text-slate-700"
+                      >
+                        <Package size={18} />
+                        <span className="text-sm font-medium">My Cart</span>
+                      </Link>
 
                       <Link
-                        to="/orders"
+                        to="/my-orders"
                         onClick={() => setIsUserMenuOpen(false)}
                         className="flex items-center gap-3 px-4 py-2.5 hover:bg-primary-50 transition-colors text-slate-700"
                       >
@@ -595,8 +603,8 @@ export default function Navbar() {
               >
                 <option value="all">All Categories</option>
                 {categories.map((cat) => (
-                  <option key={cat._id} value={cat.slug}>
-                    {cat.icon} {cat.name}
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}
                   </option>
                 ))}
               </select>
@@ -639,7 +647,23 @@ export default function Navbar() {
                   <span className="font-medium">Products</span>
                 </Link>
 
-                
+                <Link
+                  to="/cart"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors"
+                >
+                  <Package size={20} />
+                  <span className="font-medium">My Cart</span>
+                </Link>
+
+                <Link
+                  to="/my-orders"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors"
+                >
+                  <ShoppingBag size={20} />
+                  <span className="font-medium">My Orders</span>
+                </Link>
 
                 <Link
                   to="/messages"
@@ -655,14 +679,14 @@ export default function Navbar() {
                   )}
                 </Link>
 
-                {user?.role === 'supplier' && (
+                {user?.role === 'admin' && (
                   <Link
-                    to="/dashboard"
+                    to="/admin"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 transition-colors"
                   >
                     <Package size={20} />
-                    <span className="font-medium">My Products</span>
+                    <span className="font-medium">Admin Dashboard</span>
                   </Link>
                 )}
 

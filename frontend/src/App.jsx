@@ -19,6 +19,7 @@ import Messages  from './pages/Messages'
 import Checkout from './pages/Checkout'
 import OrderSuccess from './pages/OrderSuccess'
 import TrackOrder from './pages/TrackOrder'
+import MyOrders from './pages/MyOrders'
 function App() {
 
     const location = useLocation()
@@ -36,7 +37,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/category/:categorySlug" element={<ProductListingPage />} />
-            <Route path="/product/:productSlug" element={<ProductDetailPage />} />
+            <Route path="/products/:productSlug" element={<ProductDetailPage />} />
             <Route path="/become-supplier" element={<SupplierRegistration />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/login" element={<Login />} />
@@ -45,6 +46,7 @@ function App() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success/:orderId" element={<OrderSuccess />} />
           <Route path="/track-order/:orderId" element={<TrackOrder />} />
+          <Route path="/my-orders" element={< MyOrders />} />
             <Route
               path="/profile"
               element={

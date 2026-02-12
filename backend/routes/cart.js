@@ -74,10 +74,10 @@ router.post('/add', protect, async (req, res) => {
     }
     
     // Check MOQ
-    if (quantity < product.moq?.quantity) {
+    if (quantity > product.moq?.quantity) {
       return res.status(400).json({
         success: false,
-        error: `Minimum order quantity is ${product.moq.quantity} ${product.moq.unit}`
+        error: `Maximum order quantity is ${product.moq.quantity} ${product.moq.unit}`
       })
     }
     
